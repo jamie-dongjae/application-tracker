@@ -1,0 +1,9 @@
+{
+  "id": "12ab34c",
+  "shortcode": "12AB34C",
+  "title": "Data Engineer",
+  "company_name": "Acme B.V.",
+  "location": { "city": "Eindhoven", "country": "Netherlands", "region": "North Brabant" },
+  "workplace": "hybrid",
+  "description": "<p>Design pipelines. Salary €50,000 - €65,000 depending on experience. Candidates must have the right to work in the Netherlands.</p>"
+}

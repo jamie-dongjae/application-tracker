@@ -1,0 +1,12 @@
+{
+  "id": "744000060000000",
+  "name": "Product Manager",
+  "company": { "identifier": "Acme1", "name": "Acme" },
+  "location": { "city": "Rotterdam", "country": "nl", "remote": false },
+  "jobAd": {
+    "sections": {
+      "jobDescription": { "title": "Job Description", "text": "<p>Drive the roadmap. Visa sponsorship available for strong candidates.</p>" },
+      "qualifications": { "title": "Qualifications", "text": "<p>5+ years in product.</p>" }
+    }
+  }
+}

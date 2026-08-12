@@ -1,0 +1,29 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "title": "Backend Engineer",
+      "location": "Berlin",
+      "secondaryLocations": [],
+      "department": "Engineering",
+      "isRemote": false,
+      "descriptionHtml": "<p>Own services in Go. No visa sponsorship for this role.</p>",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "applyUrl": "https://jobs.ashbyhq.com/acme/f47ac10b-58cc-4372-a567-0e02b2c3d479/application",
+      "compensation": {
+        "summaryComponents": [
+          { "compensationType": "Salary", "minValue": 70000, "maxValue": 90000, "currencyCode": "EUR", "interval": "1 YEAR" }
+        ]
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "title": "Office Manager",
+      "location": "Munich",
+      "isRemote": false,
+      "descriptionHtml": "<p>Keep the office running.</p>",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "text": "Machine Learning Engineer",
+  "categories": {
+    "location": "Amsterdam, Netherlands",
+    "commitment": "Full-time",
+    "team": "AI Platform"
+  },
+  "workplaceType": "hybrid",
+  "descriptionPlain": "Build ML systems end to end. We support relocation and can sponsor a highly skilled migrant visa.",
+  "salaryRange": { "min": 65000, "max": 85000, "currency": "EUR", "interval": "per-year-salary" },
+  "country": "NL"
+}

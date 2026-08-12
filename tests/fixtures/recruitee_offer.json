@@ -1,0 +1,13 @@
+{
+  "offer": {
+    "id": 1234567,
+    "slug": "devops-engineer",
+    "title": "DevOps Engineer",
+    "company_name": "Acme",
+    "location": "Utrecht, Netherlands",
+    "city": "Utrecht",
+    "country": "Netherlands",
+    "remote": false,
+    "description": "<p>Run our Kubernetes platform. Hybrid: 2 office days. We are unable to sponsor visas.</p>"
+  }
+}
