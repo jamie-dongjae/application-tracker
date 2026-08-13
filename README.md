@@ -4,7 +4,7 @@ Local-first job application tracker. Paste a posting URL — company, title, loc
 
 I built this in the middle of my own job search: a hundred-plus applications across two countries had outgrown my spreadsheet, but I didn't want to abandon the spreadsheet — so I grew a product around it. Everything here exists because I needed it that week.
 
-![CI](https://github.com/OWNER/application-tracker/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/jamie-dongjae/application-tracker/actions/workflows/ci.yml/badge.svg)
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
@@ -32,7 +32,7 @@ I built this in the middle of my own job search: a hundred-plus applications acr
 Requires Python ≥ 3.10.
 
 ```bash
-git clone https://github.com/OWNER/application-tracker && cd application-tracker
+git clone https://github.com/jamie-dongjae/application-tracker && cd application-tracker
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python run.py
@@ -52,7 +52,7 @@ The importer finds your header row by column-name aliases (Company, Job Title, S
 
 ## Your data vs. the demo
 
-Everything under `data/` (your workbook, caches, backups) is gitignored and never leaves your machine — CI fails the build if a workbook ever lands in the repo. The [live demo](https://OWNER.github.io/application-tracker/) is a fully static build with fictional sample data; the real app is what you run locally.
+Everything under `data/` (your workbook, caches, backups) is gitignored and never leaves your machine — CI fails the build if a workbook ever lands in the repo. The [live demo](https://jamie-dongjae.github.io/application-tracker/) is a fully static build with fictional sample data; the real app is what you run locally.
 
 ## Architecture
 
