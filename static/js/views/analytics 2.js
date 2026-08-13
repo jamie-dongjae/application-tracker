@@ -104,7 +104,7 @@ export function renderInsights(el) {
 
     <div class="grid-2">
       <div class="panel">
-        <h3 class="panel-title">Funnel — furthest stage reached</h3>
+        <h2 class="panel-title">Funnel — furthest stage reached</h2>
         <div class="funnel">
           ${stages.map((s, i) => {
             const n = reach[i];
@@ -122,7 +122,7 @@ export function renderInsights(el) {
       </div>
 
       <div class="panel">
-        <h3 class="panel-title">Momentum — applications per week vs goal (${goal})</h3>
+        <h2 class="panel-title">Momentum — applications per week vs goal (${goal})</h2>
         <svg class="spark" viewBox="0 0 480 120" preserveAspectRatio="none" aria-hidden="true">
           ${weeks.map((w, i) => {
             const h = (w.n / maxWeek) * 92;
@@ -146,7 +146,7 @@ export function renderInsights(el) {
 
     <div class="grid-2" style="margin-top:14px">
       <div class="panel">
-        <h3 class="panel-title">Time in stage — median days</h3>
+        <h2 class="panel-title">Time in stage — median days</h2>
         ${Object.keys(stageDurations).length ? `<div class="barlist">
           ${Object.entries(stageDurations).map(([s, arr]) => {
             const m = median(arr);
@@ -161,7 +161,7 @@ export function renderInsights(el) {
       </div>
 
       <div class="panel">
-        <h3 class="panel-title">Salary intel — listed ranges only</h3>
+        <h2 class="panel-title">Salary intel — listed ranges only</h2>
         ${withSalary.length ? `
           <div class="grid-3">
             ${kpi('With salary', withSalary.length)}
@@ -190,7 +190,7 @@ function countBy(rows, keyFn) {
 function barPanel(title, entries, total, limit = 6) {
   const rows = entries.slice(0, limit);
   return `<div class="panel">
-    <h3 class="panel-title">${esc(title)}</h3>
+    <h2 class="panel-title">${esc(title)}</h2>
     ${rows.length ? `<div class="barlist">
       ${rows.map(([label, n]) => `
         <div class="barlist-row">

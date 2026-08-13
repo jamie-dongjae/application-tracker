@@ -79,7 +79,7 @@ export function renderDashboard(el) {
 
     <div class="grid-2">
       <div class="panel">
-        <h3 class="panel-title">Pipeline snapshot</h3>
+        <h2 class="panel-title">Pipeline snapshot</h2>
         <div class="barlist">
           ${snapshot.map((r) => `
             <div class="barlist-row">
@@ -91,7 +91,7 @@ export function renderDashboard(el) {
       </div>
 
       <div class="panel">
-        <h3 class="panel-title">Next actions</h3>
+        <h2 class="panel-title">Next actions</h2>
         <div class="row-list">
           ${stale.map((a) => `
             <div class="row-item" data-open="${a.id}">
@@ -116,7 +116,7 @@ export function renderDashboard(el) {
     </div>
 
     <div class="panel" style="margin-top:14px">
-      <h3 class="panel-title">Recent activity</h3>
+      <h2 class="panel-title">Recent activity</h2>
       <div class="row-list">
         ${state.history.slice(0, 8).map((h) => `
           <div class="row-item" style="cursor:default">

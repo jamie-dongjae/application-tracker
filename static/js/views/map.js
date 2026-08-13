@@ -250,7 +250,7 @@ function showDossier(el, id) {
     <div class="muted" style="margin:4px 0 10px">${esc(app.title)}</div>
     <div class="row-list" style="font-size:12.5px">
       <div class="row-item" style="cursor:default"><span class="faint">Status</span><span class="spacer"></span>
-        <select id="dossier-status" style="width:auto;padding:3px 8px;font-size:12px">
+        <select id="dossier-status" style="width:auto;padding:3px 8px;font-size:12.5px">
           ${STATUSES.map((s) => `<option ${s === app.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}
         </select>
       </div>
