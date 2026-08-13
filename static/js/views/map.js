@@ -149,7 +149,12 @@ export function refreshMapData(el) {
   paintChips(el);
   paintList(el);
   paintUnmapped(el);
+  // Keep an open dossier in sync with fresh data (e.g. after undo).
+  const dossier = el.querySelector('#map-dossier');
+  if (dossier && !dossier.hidden && dossierId != null) showDossier(el, dossierId);
 }
+
+let dossierId = null;
 
 function paintStats(el) {
   const total = state.apps.length;
@@ -233,8 +238,9 @@ document.addEventListener('apptracker:backfill', runBackfill);
 function showDossier(el, id) {
   const app = getApp(id);
   const box = el.querySelector('#map-dossier');
-  if (!app) { box.hidden = true; return; }
+  if (!app) { box.hidden = true; dossierId = null; return; }
   box.hidden = false;
+  dossierId = id;
   box.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px">
       <span class="dot" style="background:${STATUS_COLORS[app.status]}"></span>
@@ -243,7 +249,11 @@ function showDossier(el, id) {
     </div>
     <div class="muted" style="margin:4px 0 10px">${esc(app.title)}</div>
     <div class="row-list" style="font-size:12.5px">
-      <div class="row-item" style="cursor:default"><span class="faint">Status</span><span class="spacer"></span>${esc(app.status)}</div>
+      <div class="row-item" style="cursor:default"><span class="faint">Status</span><span class="spacer"></span>
+        <select id="dossier-status" style="width:auto;padding:3px 8px;font-size:12px">
+          ${STATUSES.map((s) => `<option ${s === app.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}
+        </select>
+      </div>
       <div class="row-item" style="cursor:default"><span class="faint">Applied</span><span class="spacer"></span><span class="num">${esc(fmtDate(app.date_applied))}</span></div>
       ${app.location ? `<div class="row-item" style="cursor:default"><span class="faint">Location</span><span class="spacer"></span>${esc(app.location)}</div>` : ''}
       ${app.work_type ? `<div class="row-item" style="cursor:default"><span class="faint">Work type</span><span class="spacer"></span>${esc(app.work_type)}</div>` : ''}
@@ -252,27 +262,34 @@ function showDossier(el, id) {
     </div>
     <div style="display:flex;gap:8px;margin-top:12px">
       ${NEXT_STATUS[app.status] ? `<button class="ghost-btn" id="dossier-adv">▸ ${esc(NEXT_STATUS[app.status])}</button>` : ''}
-      ${!['Rejected', 'Withdrawn'].includes(app.status) ? `<button class="danger-btn" id="dossier-rej" style="padding:6px 10px">✕</button>` : ''}
+      ${['Rejected', 'Withdrawn'].includes(app.status)
+        ? `<button class="ghost-btn" id="dossier-revive">↩ Revive</button>`
+        : `<button class="danger-btn" id="dossier-rej" style="padding:6px 10px" title="Mark rejected">✕</button>`}
       <span class="spacer"></span>
       ${app.url ? `<a class="ghost-btn" href="${esc(app.url)}" target="_blank" rel="noopener">Posting ↗</a>` : ''}
       <button class="accent-btn" id="dossier-open">Details</button>
     </div>`;
-  box.querySelector('#dossier-x').onclick = () => { box.hidden = true; };
+  box.querySelector('#dossier-x').onclick = () => { box.hidden = true; dossierId = null; };
   box.querySelector('#dossier-open').onclick = () => openDetail(id);
   const move = async (to) => {
+    const from = app.status;
+    if (from === to) return;
     statusFx(box, to);
     try {
       await patchApplication(id, { status: to }, { optimistic: true });
-      toast(`${app.company}: ${app.status} → ${to}`, { action: 'Undo', onAction: async () => { await undo(); } });
+      toast(`${app.company}: ${from} → ${to}`, { action: 'Undo', onAction: async () => { await undo(); } });
       showDossier(el, id);
     } catch (err) {
       if (err.status !== 409) toast('Change failed. ' + err.message, { error: true });
     }
   };
+  box.querySelector('#dossier-status').onchange = (e) => move(e.target.value);
   const adv = box.querySelector('#dossier-adv');
   if (adv) adv.onclick = () => move(NEXT_STATUS[app.status]);
   const rej = box.querySelector('#dossier-rej');
   if (rej) rej.onclick = () => move('Rejected');
+  const revive = box.querySelector('#dossier-revive');
+  if (revive) revive.onclick = () => move('Applied');
 }
 
 function frameAll() {

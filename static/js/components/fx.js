@@ -87,9 +87,17 @@ export function confetti(originEl) {
   }
 }
 
+function screenFlash(kind) {
+  const cls = `fx-screen-${kind}`;
+  document.body.classList.remove('fx-screen-offer', 'fx-screen-reject', 'fx-screen-advance');
+  void document.body.offsetWidth;
+  document.body.classList.add(cls);
+  setTimeout(() => document.body.classList.remove(cls), 950);
+}
+
 // One call site for "status changed" feedback.
 export function statusFx(el, toStatus) {
-  if (toStatus === 'Offer') { pulse(el, 'offer'); confetti(el); playOffer(); }
-  else if (toStatus === 'Rejected' || toStatus === 'Withdrawn') { pulse(el, 'reject'); playReject(); }
+  if (toStatus === 'Offer') { pulse(el, 'offer'); confetti(el); screenFlash('offer'); playOffer(); }
+  else if (toStatus === 'Rejected' || toStatus === 'Withdrawn') { pulse(el, 'reject'); screenFlash('reject'); playReject(); }
   else { pulse(el, 'advance'); playAdvance(); }
 }

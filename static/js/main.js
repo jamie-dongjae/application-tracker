@@ -5,6 +5,7 @@ import { openAddFlow, isOpen as isModalOpen } from './components/addflow.js';
 import { openPalette, isPaletteOpen } from './components/palette.js';
 import { isDetailOpen, closeDetail } from './components/detail.js';
 import { isSoundOn, toggleSound } from './components/fx.js';
+import { isMusicOn, toggleMusic } from './components/music.js';
 import { toast } from './components/toast.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderPipeline } from './views/pipeline.js';
@@ -51,10 +52,18 @@ document.getElementById('theme-btn').onclick = () => {
 const soundBtn = document.getElementById('sound-btn');
 function paintSoundBtn() {
   soundBtn.style.opacity = isSoundOn() ? '' : '.4';
-  soundBtn.title = isSoundOn() ? 'Sound on — click to mute' : 'Sound off';
+  soundBtn.title = isSoundOn() ? 'Sound effects on — click to mute' : 'Sound effects off';
 }
 soundBtn.onclick = () => { toggleSound(); paintSoundBtn(); };
 paintSoundBtn();
+
+const musicBtn = document.getElementById('music-btn');
+function paintMusicBtn() {
+  musicBtn.style.opacity = isMusicOn() ? '' : '.4';
+  musicBtn.title = isMusicOn() ? 'Music on — click to stop' : 'Background music (generated live)';
+}
+musicBtn.onclick = () => { toggleMusic(); paintMusicBtn(); };
+paintMusicBtn();
 
 // ---- global wiring ----
 

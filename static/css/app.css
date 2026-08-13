@@ -1003,3 +1003,30 @@ hr.sep { border: 0; border-top: 1px solid var(--line-soft); margin: 14px 0; }
   border-radius: 2px;
   pointer-events: none;
 }
+
+/* full-screen vignette flash on offer / rejection */
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  pointer-events: none;
+  opacity: 0;
+}
+
+body.fx-screen-offer::after {
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(70, 201, 141, .28));
+  animation: fx-screen .95s ease;
+}
+
+body.fx-screen-reject::after {
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(224, 92, 110, .26));
+  animation: fx-screen .95s ease;
+}
+
+@keyframes fx-screen {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  100% { opacity: 0; }
+}
