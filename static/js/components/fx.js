@@ -65,6 +65,7 @@ export function pulse(el, kind) {
 }
 
 export function confetti(originEl) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const rect = originEl ? originEl.getBoundingClientRect()
     : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
   const cx = rect.left + rect.width / 2;
