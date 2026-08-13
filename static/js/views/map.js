@@ -34,8 +34,10 @@ const SPACE_STYLE = {
     satellite: {
       type: 'raster',
       tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-      tileSize: 256,
-      maxzoom: 19,
+      // 128 makes MapLibre fetch one zoom level deeper than needed —
+      // double the effective resolution of the globe.
+      tileSize: 128,
+      maxzoom: 18,
       attribution: '© Esri, Maxar, Earthstar Geographics',
     },
     labels: {
@@ -56,18 +58,28 @@ const SPACE_STYLE = {
 let map = null;
 let spinPaused = false;
 let spinResumeTimer = null;
+let spinLastT = 0;
+const SPIN_DEG_PER_SEC = 3.2; // one full revolution ≈ 112 s
 
-function spin() {
+// Seamless idle rotation: a per-frame loop that simply advances longitude.
+// It self-suspends while the user interacts, while any camera animation is
+// running, while a job is selected, or when zoomed in past globe scale —
+// and resumes on its own the moment conditions clear.
+function spinLoop(t) {
+  requestAnimationFrame(spinLoop);
+  const dt = Math.min((t - spinLastT) / 1000, 0.1);
+  spinLastT = t;
   if (!map || spinPaused || dossierId != null) return;
-  if (map.getZoom() > 3.4) return; // rotate only out in space
+  if (map.getZoom() > 4 || map.isMoving()) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = map.getCenter();
-  map.easeTo({ center: [c.lng + 10, c.lat], duration: 7000, easing: (t) => t, essential: false });
+  map.setCenter([c.lng + SPIN_DEG_PER_SEC * dt, c.lat]);
 }
 
 function pauseSpin() {
   spinPaused = true;
   clearTimeout(spinResumeTimer);
-  spinResumeTimer = setTimeout(() => { spinPaused = false; spin(); }, 7000);
+  spinResumeTimer = setTimeout(() => { spinPaused = false; }, 6000);
 }
 
 function mapped() { return state.apps.filter((a) => a.latitude !== '' && a.longitude !== '' && a.latitude != null); }
@@ -189,17 +201,15 @@ function buildMapOnce(el) {
     });
     map.on('mouseenter', 'pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'pins', () => { map.getCanvas().style.cursor = ''; });
-    // Idle rotation: chain a new segment whenever movement settles;
-    // any user gesture pauses it for a while.
-    map.on('moveend', () => spin());
+    // Any user gesture pauses the idle rotation for a few seconds.
     for (const ev of ['mousedown', 'touchstart', 'wheel', 'dragstart']) {
       map.getCanvas().addEventListener(ev, pauseSpin, { passive: true });
     }
+    requestAnimationFrame(spinLoop);
     map.resize();
     // Cinematic approach: hold the full globe for a beat, then descend to the pins.
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) frameAll(0);
     else setTimeout(() => frameAll(3200), 600);
-    setTimeout(() => spin(), 4600);
   });
 }
 
