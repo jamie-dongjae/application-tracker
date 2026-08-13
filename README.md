@@ -11,7 +11,7 @@ Local-first job application tracker. Paste a posting URL — company, title, loc
 - **One-field add** — paste a job URL; the server resolves it through a parser chain: ATS JSON APIs (Greenhouse, Lever, Ashby, Workable, Recruitee, SmartRecruiters, Workday) → schema.org JSON-LD → OpenGraph/meta heuristics. Every prefilled value carries a provenance chip; nothing saves without your review.
 - **Blocked-site fallback** — LinkedIn and Indeed refuse robots. The app detects the authwall and parses a pasted job description locally instead, including visa-sponsorship mentions with the matching quote as evidence.
 - **A pipeline that matches reality** — four stages: Wishlist → Applied → Interview → Offer, with a closed tray for rejections. One-click **advance / reject buttons on every card** (with sound and a small celebration when an offer lands), drag-and-drop, and undo for everything.
-- **Accurate map** — locations are geocoded once via OpenStreetMap Nominatim (cached, rate-limited, free) and stored as coordinates in the workbook. Remote roles are listed, never pinned to fake spots; unmapped rows are shown honestly with a one-click fix.
+- **A hyperreal globe** — applications pinned on a satellite Earth floating in a starfield (MapLibre globe projection + atmosphere over Esri World Imagery), entered with a cinematic space-to-Earth descent. Locations are geocoded once via OpenStreetMap Nominatim (cached, rate-limited, free) and stored as coordinates in the workbook; remote roles are listed, never pinned to fake spots, and unmapped rows get a one-click fix.
 - **Insights** — response rate, Applied → Interview → Offer funnel (history-aware), weekly momentum vs. your goal, and source/location/sponsorship breakdowns. Computed from your data; nothing is estimated.
 - **Interview prep bank** — questions and answers, grouped by category.
 - **Excel is the database** — open `tracker.xlsx` in Excel any time. External edits are detected and reloaded; if the file is open in Excel during a save you get a clear banner instead of a corrupt file. Atomic writes plus rolling backups in `data/backups/`.
@@ -63,7 +63,7 @@ flowchart LR
     A --> G[Nominatim geocoder<br>cache · 1 req/1.1 s]
 ```
 
-Five runtime dependencies: `fastapi`, `uvicorn`, `openpyxl`, `httpx`, `selectolax`. The frontend is plain ES modules — no bundler, no node_modules. Sounds are synthesized with WebAudio (no audio files); motion (staggered entrances, KPI count-ups, kanban Flip glides) by [GSAP](https://gsap.com) — the app degrades gracefully if its CDN is unreachable and respects `prefers-reduced-motion`. Map tiles by [CARTO](https://carto.com/attributions)/OpenStreetMap, rendering by MapLibre GL.
+Five runtime dependencies: `fastapi`, `uvicorn`, `openpyxl`, `httpx`, `selectolax`. The frontend is plain ES modules — no bundler, no node_modules. Sounds are synthesized with WebAudio (no audio files); motion (staggered entrances, KPI count-ups, kanban Flip glides) by [GSAP](https://gsap.com) — the app degrades gracefully if its CDN is unreachable and respects `prefers-reduced-motion`. Satellite imagery © Esri, Maxar, Earthstar Geographics; labels by [CARTO](https://carto.com/attributions)/OpenStreetMap; rendering by MapLibre GL.
 
 ## Development
 

@@ -12,13 +12,45 @@ const STATUS_HEX = {
   'Offer': '#3ecf95', 'Rejected': '#f0647d', 'Withdrawn': '#66759b',
 };
 
-const STYLE = {
-  dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-  light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+// Hyperreal space view: satellite imagery on a globe with atmosphere.
+// Esri World Imagery + CARTO label overlay — free with attribution.
+const SPACE_STYLE = {
+  version: 8,
+  projection: { type: 'globe' },
+  glyphs: 'https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
+  sky: {
+    'sky-color': '#02060f',
+    'horizon-color': '#1b4468',
+    'fog-color': '#0a1c2e',
+    'sky-horizon-blend': 0.6,
+    'horizon-fog-blend': 0.6,
+    'fog-ground-blend': 0.85,
+    'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.4, 10, 0],
+  },
+  sources: {
+    satellite: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© Esri, Maxar, Earthstar Geographics',
+    },
+    labels: {
+      type: 'raster',
+      tiles: ['https://basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© CARTO © OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    { id: 'space', type: 'background', paint: { 'background-color': '#01030a' } },
+    { id: 'satellite', type: 'raster', source: 'satellite',
+      paint: { 'raster-fade-duration': 250, 'raster-saturation': 0.08, 'raster-contrast': 0.04 } },
+    { id: 'labels', type: 'raster', source: 'labels', minzoom: 3.5, paint: { 'raster-opacity': 0.9 } },
+  ],
 };
 
 let map = null;
-let mapTheme = null;
 
 function mapped() { return state.apps.filter((a) => a.latitude !== '' && a.longitude !== '' && a.latitude != null); }
 
@@ -82,23 +114,22 @@ export function renderMap(el) {
 }
 
 function buildMapOnce(el) {
-  const theme = document.documentElement.dataset.theme || 'dark';
-  if (map && mapTheme === theme) return;
-  if (map) { map.remove(); map = null; }
+  if (map) return;
   if (typeof maplibregl === 'undefined') {
     el.querySelector('#map').innerHTML = '<div class="empty" style="padding-top:40vh">Map library failed to load (offline?).</div>';
     return;
   }
-  mapTheme = theme;
+  const cinematic = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   map = new maplibregl.Map({
     container: el.querySelector('#map'),
-    style: STYLE[theme],
-    center: [8, 50],
-    zoom: 3.4,
+    style: SPACE_STYLE,
+    // Start out in space; the load handler flies down to the pins.
+    center: [40, 24],
+    zoom: cinematic ? 0.8 : 2.4,
     attributionControl: { compact: true },
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-  
+
 
   map.on('load', () => {
     map.addSource('apps', { type: 'geojson', data: toGeoJSON(), cluster: true, clusterRadius: 42 });
@@ -114,16 +145,16 @@ function buildMapOnce(el) {
     map.addLayer({
       id: 'cluster-count', type: 'symbol', source: 'apps', filter: ['has', 'point_count'],
       layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 11, 'text-font': ['Open Sans Semibold'] },
-      paint: { 'text-color': theme === 'dark' ? '#dce5f5' : '#182136' },
+      paint: { 'text-color': '#eaf2ff' },
     });
     map.addLayer({
       id: 'pins', type: 'circle', source: 'apps', filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-color': ['match', ['get', 'status'],
-          ...Object.entries(STATUS_HEX).flat(), '#8d9ab9'],
-        'circle-radius': ['case', ['==', ['get', 'id'], ['literal', -1]], 8, 5.5],
-        'circle-stroke-color': 'rgba(0,0,0,.5)',
-        'circle-stroke-width': 1,
+          ...Object.entries(STATUS_HEX).flat(), '#94a2c4'],
+        'circle-radius': 5.5,
+        'circle-stroke-color': 'rgba(255,255,255,.9)',
+        'circle-stroke-width': 1.4,
       },
     });
 
@@ -139,7 +170,9 @@ function buildMapOnce(el) {
     map.on('mouseenter', 'pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'pins', () => { map.getCanvas().style.cursor = ''; });
     map.resize();
-    frameAll();
+    // Cinematic approach: hold the full globe for a beat, then descend to the pins.
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) frameAll(0);
+    else setTimeout(() => frameAll(3200), 600);
   });
 }
 
@@ -165,7 +198,7 @@ function paintStats(el) {
     `<span><b>${total}</b> TRACKED</span><span><b>${activeN}</b> ACTIVE</span>` +
     `<span><b>${offers}</b> OFFERS</span><span><b>${rejected}</b> REJECTED</span>` +
     `<span class="link" id="map-frame">FRAME ALL</span>`;
-  el.querySelector('#map-frame').onclick = frameAll;
+  el.querySelector('#map-frame').onclick = () => frameAll();
 }
 
 function paintChips(el) {
@@ -294,17 +327,16 @@ function showDossier(el, id) {
   if (revive) revive.onclick = () => move('Applied');
 }
 
-function frameAll() {
+function frameAll(duration = 900) {
   if (!map) return;
   const features = toGeoJSON().features;
   if (!features.length) return;
   const lons = features.map((f) => f.geometry.coordinates[0]);
   const lats = features.map((f) => f.geometry.coordinates[1]);
   map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-    { padding: 90, maxZoom: 10, duration: 700 });
+    { padding: 90, maxZoom: 10, duration, essential: false });
 }
 
-export function onThemeChange(el) {
-  if (state.view === 'map') { mapTheme = null; buildMapOnce(el); }
-  else mapTheme = null;
+export function onThemeChange() {
+  // The space view is theme-independent — nothing to rebuild.
 }

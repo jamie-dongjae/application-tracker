@@ -545,7 +545,22 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 /* ---------- map view ---------- */
 
-.map-wrap { position: absolute; inset: 0; }
+.map-wrap {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1.2px 1.2px at 12% 22%, rgba(255, 255, 255, .85), transparent 55%),
+    radial-gradient(1px 1px at 31% 68%, rgba(255, 255, 255, .6), transparent 55%),
+    radial-gradient(1.4px 1.4px at 48% 12%, rgba(210, 230, 255, .8), transparent 55%),
+    radial-gradient(1px 1px at 63% 45%, rgba(255, 255, 255, .55), transparent 55%),
+    radial-gradient(1.3px 1.3px at 78% 76%, rgba(255, 255, 255, .75), transparent 55%),
+    radial-gradient(1px 1px at 87% 18%, rgba(200, 225, 255, .6), transparent 55%),
+    radial-gradient(1.1px 1.1px at 22% 88%, rgba(255, 255, 255, .6), transparent 55%),
+    radial-gradient(1px 1px at 55% 92%, rgba(255, 255, 255, .5), transparent 55%),
+    radial-gradient(1.2px 1.2px at 93% 55%, rgba(255, 255, 255, .65), transparent 55%),
+    radial-gradient(1px 1px at 7% 50%, rgba(220, 235, 255, .55), transparent 55%),
+    radial-gradient(ellipse at 50% 42%, #0b1830 0%, #050b18 45%, #01040c 100%);
+}
 
 #map { position: absolute; inset: 0; }
 
