@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "application-tracker"
-version = "1.0.0"
+version = "1.1.0"
 description = "Local-first job application tracker: paste a posting URL, everything else is prefilled. Excel backend, accurate map, zero cost."
 readme = "README.md"
 requires-python = ">=3.10"
