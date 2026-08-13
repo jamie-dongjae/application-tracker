@@ -71,20 +71,44 @@ export function confetti(originEl) {
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
   const colors = ['#4dd6ff', '#46c98d', '#e8eef9', '#d9a441'];
-  for (let i = 0; i < 26; i++) {
+  const useGsap = !!window.gsap;
+  for (let i = 0; i < 28; i++) {
     const p = document.createElement('span');
     p.className = 'fx-particle';
     p.style.background = colors[i % colors.length];
     p.style.left = cx + 'px';
     p.style.top = cy + 'px';
     document.body.appendChild(p);
-    const angle = (Math.PI * 2 * i) / 26 + Math.random() * 0.5;
-    const dist = 60 + Math.random() * 110;
-    p.animate([
-      { transform: 'translate(0,0) scale(1)', opacity: 1 },
-      { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist + 60}px) scale(.4) rotate(${Math.random() * 300}deg)`, opacity: 0 },
-    ], { duration: 700 + Math.random() * 500, easing: 'cubic-bezier(.15,.6,.3,1)' })
-      .onfinish = () => p.remove();
+    const angle = (Math.PI * 2 * i) / 28 + Math.random() * 0.5;
+    const dist = 70 + Math.random() * 120;
+    if (useGsap) {
+      // burst outward, then gravity takes over
+      gsap.to(p, {
+        x: Math.cos(angle) * dist,
+        duration: 1.1 + Math.random() * 0.4,
+        ease: 'power2.out',
+      });
+      gsap.to(p, {
+        y: Math.sin(angle) * dist * 0.5 - 70,
+        duration: 0.45,
+        ease: 'power2.out',
+        onComplete: () => gsap.to(p, { y: '+=260', duration: 0.9, ease: 'power1.in' }),
+      });
+      gsap.to(p, {
+        rotation: (Math.random() - 0.5) * 540,
+        scale: 0.35,
+        autoAlpha: 0,
+        duration: 1.3,
+        ease: 'power1.in',
+        onComplete: () => p.remove(),
+      });
+    } else {
+      p.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist + 60}px) scale(.4) rotate(${Math.random() * 300}deg)`, opacity: 0 },
+      ], { duration: 700 + Math.random() * 500, easing: 'cubic-bezier(.15,.6,.3,1)' })
+        .onfinish = () => p.remove();
+    }
   }
 }
 

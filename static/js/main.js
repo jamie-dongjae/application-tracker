@@ -6,6 +6,7 @@ import { openPalette, isPaletteOpen } from './components/palette.js';
 import { isDetailOpen, closeDetail } from './components/detail.js';
 import { isSoundOn, toggleSound } from './components/fx.js';
 import { isMusicOn, toggleMusic } from './components/music.js';
+import { enterView } from './components/motion.js';
 import { toast } from './components/toast.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderPipeline } from './views/pipeline.js';
@@ -26,6 +27,8 @@ function currentView() {
   return VIEWS[name] ? name : 'dashboard';
 }
 
+let lastAnimatedView = null;
+
 function renderCurrent() {
   const name = currentView();
   state.view = name;
@@ -33,7 +36,13 @@ function renderCurrent() {
   document.querySelectorAll('.nav a').forEach((a) => {
     a.setAttribute('aria-selected', a.dataset.view === name ? 'true' : 'false');
   });
-  VIEWS[name](document.getElementById(`view-${name}`));
+  const el = document.getElementById(`view-${name}`);
+  VIEWS[name](el);
+  // Entrance motion only on navigation — data refreshes re-render in place.
+  if (name !== lastAnimatedView) {
+    lastAnimatedView = name;
+    enterView(el, name);
+  }
 }
 
 // ---- theme ----

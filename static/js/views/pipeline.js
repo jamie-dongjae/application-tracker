@@ -5,14 +5,20 @@ import { state, BOARD_STATUSES, CLOSED_STATUSES, NEXT_STATUS, STATUS_COLORS, pat
 import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
+import { captureCards, playFlip } from '../components/motion.js';
 
 async function changeStatus(id, to, cardEl) {
   const app = state.apps.find((a) => a.id === id);
   if (!app || app.status === to) return;
   const from = app.status;
-  statusFx(cardEl, to);
+  // Capture positions before any re-render; animate once the server confirm
+  // has re-rendered too, so the Flip glide plays out uninterrupted.
+  const flipState = captureCards();
   try {
     await patchApplication(id, { status: to }, { optimistic: true });
+    playFlip(flipState);
+    const fresh = document.querySelector(`#view-pipeline .card[data-id="${id}"]`);
+    statusFx(fresh || cardEl, to);
     toast(`${app.company}: ${from} → ${to}`, {
       action: 'Undo', onAction: async () => { await undo(); },
     });
@@ -35,7 +41,7 @@ export function renderPipeline(el) {
       : `${next ? `<button class="card-btn adv" data-act="advance" title="Move to ${esc(next)}">▸ ${esc(next)}</button>` : ''}
          <button class="card-btn rej" data-act="reject" title="Mark rejected">✕ Reject</button>`;
     return `
-      <div class="card" draggable="true" data-id="${a.id}">
+      <div class="card" draggable="true" data-id="${a.id}" data-flip-id="app-${a.id}">
         <div class="card-company">${esc(a.company)}</div>
         <div class="card-title">${esc(a.title)}</div>
         <div class="card-meta">
