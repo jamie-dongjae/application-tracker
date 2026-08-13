@@ -105,6 +105,7 @@ function start() {
   master.gain.linearRampToValueAtTime(1, ctx.currentTime + 3);
   tick();
   schedulerId = setInterval(tick, 800);
+  document.documentElement.dataset.music = 'playing';
 }
 
 function stop() {
@@ -114,6 +115,7 @@ function stop() {
   master.gain.cancelScheduledValues(ctx.currentTime);
   master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
   master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.2);
+  delete document.documentElement.dataset.music;
 }
 
 export function isMusicOn() { return enabled; }
@@ -125,24 +127,23 @@ export function toggleMusic() {
   return enabled;
 }
 
-// Begin as eagerly as the browser allows: some browsers permit autoplay
-// for sites the user has engaged with before — try that first, otherwise
-// start at the first gesture.
+// Begin as eagerly as the browser allows. Chrome quirk: resume() called
+// outside a user gesture returns a promise that stays PENDING until a
+// gesture arrives — so gesture listeners must be armed unconditionally,
+// never from inside that promise chain.
 function armGestureStart() {
-  const kick = () => { if (enabled) start(); };
+  const kick = () => { if (enabled && !running) start(); };
   window.addEventListener('pointerdown', kick, { once: true });
   window.addEventListener('keydown', kick, { once: true });
   window.addEventListener('touchstart', kick, { once: true, passive: true });
 }
 
 if (enabled) {
+  armGestureStart();
   try {
     if (!ctx) setup();
-    ctx.resume().catch(() => {}).finally(() => {
-      if (ctx.state === 'running') start();
-      else armGestureStart();
-    });
-  } catch (e) {
-    armGestureStart();
-  }
+    // Resolves immediately where autoplay is already allowed, or right
+    // after the first gesture elsewhere; start() is idempotent.
+    ctx.resume().then(() => { if (enabled && !running) start(); }).catch(() => {});
+  } catch (e) { /* gesture path stays armed */ }
 }

@@ -1282,3 +1282,15 @@ body.fx-screen-reject::after {
 }
 
 }
+
+/* music button breathes gently while audio is actually playing */
+
+[data-music="playing"] #music-btn {
+  color: var(--accent);
+  animation: music-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes music-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
