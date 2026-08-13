@@ -260,13 +260,15 @@ function showDossier(el, id) {
       ${app.sponsorship ? `<div class="row-item" style="cursor:default"><span class="faint">Sponsorship</span><span class="spacer"></span>${esc(app.sponsorship)}</div>` : ''}
       ${app.source ? `<div class="row-item" style="cursor:default"><span class="faint">Source</span><span class="spacer"></span>${esc(app.source)}</div>` : ''}
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      ${NEXT_STATUS[app.status] ? `<button class="ghost-btn" id="dossier-adv">▸ ${esc(NEXT_STATUS[app.status])}</button>` : ''}
+    <div class="dossier-actions">
+      ${NEXT_STATUS[app.status] ? `<button class="ghost-btn grow" id="dossier-adv">▸ ${esc(NEXT_STATUS[app.status])}</button>` : ''}
       ${['Rejected', 'Withdrawn'].includes(app.status)
-        ? `<button class="ghost-btn" id="dossier-revive">↩ Revive</button>`
-        : `<button class="danger-btn" id="dossier-rej" style="padding:6px 10px" title="Mark rejected">✕</button>`}
-      <span class="spacer"></span>
+        ? `<button class="ghost-btn grow" id="dossier-revive">↩ Revive</button>`
+        : `<button class="danger-btn" id="dossier-rej" title="Mark rejected">✕ Reject</button>`}
+    </div>
+    <div class="dossier-actions">
       ${app.url ? `<a class="ghost-btn" href="${esc(app.url)}" target="_blank" rel="noopener">Posting ↗</a>` : ''}
+      <span class="spacer"></span>
       <button class="accent-btn" id="dossier-open">Details</button>
     </div>`;
   box.querySelector('#dossier-x').onclick = () => { box.hidden = true; dossierId = null; };
