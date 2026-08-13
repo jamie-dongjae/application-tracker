@@ -12,6 +12,7 @@
   <link href="css/app.css" rel="stylesheet">
 </head>
 <body>
+  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
   <div id="banner" class="banner" hidden></div>
 
   <header class="topbar">
@@ -20,9 +21,9 @@
       <span class="brand-name">APPLICATION TRACKER</span>
     </a>
     <nav class="nav" role="tablist" aria-label="Views">
+      <a href="#/map"       data-view="map"       role="tab">Map</a>
       <a href="#/dashboard" data-view="dashboard" role="tab">Dashboard</a>
       <a href="#/pipeline"  data-view="pipeline"  role="tab">Pipeline</a>
-      <a href="#/map"       data-view="map"       role="tab">Map</a>
       <a href="#/insights"  data-view="insights"  role="tab">Insights</a>
       <a href="#/prep"      data-view="prep"      role="tab">Prep</a>
     </nav>

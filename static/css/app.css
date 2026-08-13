@@ -44,9 +44,9 @@
   --glass-shadow: 0 18px 48px rgba(0, 0, 0, .5);
   --glass-blur: 24px;
   --glass-saturate: 1.6;
-  --ambient-a: rgba(77, 214, 255, .13);
-  --ambient-b: rgba(125, 95, 255, .11);
-  --ambient-c: rgba(70, 201, 141, .09);
+  --ambient-a: rgba(77, 214, 255, .17);
+  --ambient-b: rgba(125, 95, 255, .15);
+  --ambient-c: rgba(70, 201, 141, .12);
 }
 
 [data-theme="light"] {
@@ -68,9 +68,9 @@
   --glass-line: rgba(24, 33, 54, .10);
   --glass-highlight: rgba(255, 255, 255, .9);
   --glass-shadow: 0 18px 44px rgba(24, 33, 54, .16);
-  --ambient-a: rgba(77, 180, 255, .20);
-  --ambient-b: rgba(150, 120, 255, .16);
-  --ambient-c: rgba(80, 210, 160, .15);
+  --ambient-a: rgba(77, 180, 255, .26);
+  --ambient-b: rgba(150, 120, 255, .20);
+  --ambient-c: rgba(80, 210, 160, .19);
   --s-wishlist: #6b7a9c;
   --s-applied: #b07f17;
   --s-screen: #2270c4;
@@ -86,22 +86,67 @@ html, body {
   height: 100%;
 }
 
-body::before {
-  content: "";
+/* Living aurora backdrop: three color fields breathing on their own
+   clocks. Pure transforms on soft radial gradients — no filters, GPU-only,
+   and the reduced-motion kill-switch freezes them. */
+
+.ambient {
   position: fixed;
-  inset: -8%;
+  inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(42% 48% at 16% 10%, var(--ambient-a), transparent 72%),
-    radial-gradient(46% 52% at 86% 6%, var(--ambient-b), transparent 72%),
-    radial-gradient(55% 60% at 68% 96%, var(--ambient-c), transparent 72%);
-  animation: ambient-drift 52s ease-in-out infinite;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient i {
+  position: absolute;
+  border-radius: 50%;
   will-change: transform;
 }
 
-@keyframes ambient-drift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-2.2%, 1.8%, 0) scale(1.07); }
+.ambient i:nth-child(1) {
+  width: 62vw;
+  height: 62vw;
+  left: -14%;
+  top: -22%;
+  background: radial-gradient(circle, var(--ambient-a), transparent 62%);
+  animation: blob-a 38s ease-in-out infinite alternate;
+}
+
+.ambient i:nth-child(2) {
+  width: 56vw;
+  height: 56vw;
+  right: -16%;
+  top: -14%;
+  background: radial-gradient(circle, var(--ambient-b), transparent 62%);
+  animation: blob-b 52s ease-in-out infinite alternate;
+}
+
+.ambient i:nth-child(3) {
+  width: 68vw;
+  height: 68vw;
+  left: 28%;
+  bottom: -34%;
+  background: radial-gradient(circle, var(--ambient-c), transparent 62%);
+  animation: blob-c 64s ease-in-out infinite alternate;
+}
+
+@keyframes blob-a {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  45% { transform: translate3d(14vw, 10vh, 0) scale(1.18); }
+  100% { transform: translate3d(4vw, 26vh, 0) scale(0.92); }
+}
+
+@keyframes blob-b {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-16vw, 14vh, 0) scale(1.22); }
+  100% { transform: translate3d(-5vw, 4vh, 0) scale(0.95); }
+}
+
+@keyframes blob-c {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-18vw, -12vh, 0) scale(1.12); }
+  100% { transform: translate3d(10vw, -4vh, 0) scale(1.02); }
 }
 
 body {

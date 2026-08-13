@@ -11,9 +11,9 @@ let active = 0;
 
 function commands() {
   const nav = [
-    { kind: 'go', label: 'Dashboard', run: () => (location.hash = '#/dashboard'), hint: '1' },
-    { kind: 'go', label: 'Pipeline', run: () => (location.hash = '#/pipeline'), hint: '2' },
-    { kind: 'go', label: 'Map', run: () => (location.hash = '#/map'), hint: '3' },
+    { kind: 'go', label: 'Map', run: () => (location.hash = '#/map'), hint: '1' },
+    { kind: 'go', label: 'Dashboard', run: () => (location.hash = '#/dashboard'), hint: '2' },
+    { kind: 'go', label: 'Pipeline', run: () => (location.hash = '#/pipeline'), hint: '3' },
     { kind: 'go', label: 'Insights', run: () => (location.hash = '#/insights'), hint: '4' },
     { kind: 'go', label: 'Prep', run: () => (location.hash = '#/prep'), hint: '5' },
   ];

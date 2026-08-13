@@ -112,7 +112,7 @@ document.addEventListener('keydown', (e) => {
 
   if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openAddFlow(); }
   else if (e.key >= '1' && e.key <= '5') {
-    location.hash = '#/' + ['dashboard', 'pipeline', 'map', 'insights', 'prep'][Number(e.key) - 1];
+    location.hash = '#/' + ['map', 'dashboard', 'pipeline', 'insights', 'prep'][Number(e.key) - 1];
   }
 });
 

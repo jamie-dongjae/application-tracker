@@ -5,6 +5,8 @@
   // Demo defaults: ambient music on (it starts at the visitor's first
   // click/keypress — browsers forbid audio before a user gesture).
   window.APPTRACKER_DEFAULTS = { music: true };
+  // The demo's first sight is the space globe.
+  if (!location.hash) location.hash = '#/map';
   const realFetch = window.fetch.bind(window);
   let db = null;
   let nextId = 1;
