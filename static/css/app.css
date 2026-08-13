@@ -5,13 +5,13 @@
    ============================================================ */
 
 :root {
-  --bg: #070b14;
-  --bg-raised: #0a101d;
-  --panel: #0d1425;
-  --panel-2: #111a2f;
-  --line: #1b2640;
-  --line-soft: #141e35;
-  --text: #dce5f5;
+  --bg: #060b16;
+  --bg-raised: #0b1322;
+  --panel: #101a30;
+  --panel-2: #16223c;
+  --line: #22304f;
+  --line-soft: #1a2540;
+  --text: #e2e9f7;
   --text-dim: #97a4c2;
   --text-faint: #6e7c9d;
   --accent: #4dd6ff;
@@ -20,14 +20,12 @@
   --danger: #e05c6e;
   --ok: #46c98d;
 
-  --s-wishlist: #8d9ab9;
-  --s-applied: #d9a441;
-  --s-screen: #5aa7e8;
-  --s-technical: #9d8cff;
-  --s-onsite: #e8865a;
-  --s-offer: #46c98d;
-  --s-rejected: #e05c6e;
-  --s-withdrawn: #5c6a89;
+  --s-wishlist: #94a2c4;
+  --s-applied: #e5aa3f;
+  --s-screen: #5fb2f2;
+  --s-offer: #3ecf95;
+  --s-rejected: #f0647d;
+  --s-withdrawn: #66759b;
 
   --font-ui: "Archivo", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -46,19 +44,19 @@
   --glass-shadow: 0 18px 48px rgba(0, 0, 0, .5);
   --glass-blur: 24px;
   --glass-saturate: 1.6;
-  --ambient-a: rgba(77, 214, 255, .10);
-  --ambient-b: rgba(125, 95, 255, .09);
-  --ambient-c: rgba(70, 201, 141, .06);
+  --ambient-a: rgba(77, 214, 255, .13);
+  --ambient-b: rgba(125, 95, 255, .11);
+  --ambient-c: rgba(70, 201, 141, .09);
 }
 
 [data-theme="light"] {
-  --bg: #f4f6fa;
-  --bg-raised: #eef1f7;
+  --bg: #eef2f9;
+  --bg-raised: #e7edf7;
   --panel: #ffffff;
-  --panel-2: #f7f9fc;
-  --line: #dbe2ee;
-  --line-soft: #e7ecf5;
-  --text: #182136;
+  --panel-2: #f4f7fc;
+  --line: #d3dcec;
+  --line-soft: #e2e9f4;
+  --text: #131d33;
   --text-dim: #4d5a78;
   --text-faint: #75839f;
   --accent: #0e8ec5;
@@ -70,9 +68,15 @@
   --glass-line: rgba(24, 33, 54, .10);
   --glass-highlight: rgba(255, 255, 255, .9);
   --glass-shadow: 0 18px 44px rgba(24, 33, 54, .16);
-  --ambient-a: rgba(77, 180, 255, .16);
-  --ambient-b: rgba(150, 120, 255, .13);
-  --ambient-c: rgba(80, 210, 160, .12);
+  --ambient-a: rgba(77, 180, 255, .20);
+  --ambient-b: rgba(150, 120, 255, .16);
+  --ambient-c: rgba(80, 210, 160, .15);
+  --s-wishlist: #6b7a9c;
+  --s-applied: #b07f17;
+  --s-screen: #2270c4;
+  --s-offer: #148f5c;
+  --s-rejected: #cf3a52;
+  --s-withdrawn: #79879f;
 }
 
 * { box-sizing: border-box; }
@@ -85,12 +89,19 @@ html, body {
 body::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -8%;
   z-index: -1;
   background:
     radial-gradient(42% 48% at 16% 10%, var(--ambient-a), transparent 72%),
     radial-gradient(46% 52% at 86% 6%, var(--ambient-b), transparent 72%),
     radial-gradient(55% 60% at 68% 96%, var(--ambient-c), transparent 72%);
+  animation: ambient-drift 52s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes ambient-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-2.2%, 1.8%, 0) scale(1.07); }
 }
 
 body {

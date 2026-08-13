@@ -8,8 +8,8 @@ import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
 
 const STATUS_HEX = {
-  'Wishlist': '#8d9ab9', 'Applied': '#d9a441', 'Interview': '#5aa7e8',
-  'Offer': '#46c98d', 'Rejected': '#e05c6e', 'Withdrawn': '#5c6a89',
+  'Wishlist': '#94a2c4', 'Applied': '#e5aa3f', 'Interview': '#5fb2f2',
+  'Offer': '#3ecf95', 'Rejected': '#f0647d', 'Withdrawn': '#66759b',
 };
 
 const STYLE = {
