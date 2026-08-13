@@ -2,6 +2,9 @@
 // bundled sample data, entirely in memory. Loaded (as a classic script)
 // before the app's module scripts so the override is in place first.
 (function () {
+  // Demo defaults: ambient music on (it starts at the visitor's first
+  // click/keypress — browsers forbid audio before a user gesture).
+  window.APPTRACKER_DEFAULTS = { music: true };
   const realFetch = window.fetch.bind(window);
   let db = null;
   let nextId = 1;

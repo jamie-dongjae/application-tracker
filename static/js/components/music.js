@@ -12,7 +12,8 @@ let schedulerId = null;
 let chordAt = 0;
 let chordIdx = 0;
 let pluckAt = 0;
-let enabled = localStorage.getItem('apptracker-music') === '1';
+const _stored = localStorage.getItem('apptracker-music');
+let enabled = _stored !== null ? _stored === '1' : !!(window.APPTRACKER_DEFAULTS && window.APPTRACKER_DEFAULTS.music);
 
 // Cmaj7 → Am7 → Fmaj7 → G7 (low, warm voicings)
 const CHORDS = [
