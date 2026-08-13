@@ -56,31 +56,32 @@ const SPACE_STYLE = {
 };
 
 let map = null;
-let spinPaused = false;
-let spinResumeTimer = null;
 let spinLastT = 0;
+let spinLastInteract = 0; // rAF-timebase stamp of the last user input or camera motion
+let spinPointerDown = false;
 const SPIN_DEG_PER_SEC = 3.2; // one full revolution ≈ 112 s
+const SPIN_IDLE_MS = 3000;
 
-// Seamless idle rotation: a per-frame loop that simply advances longitude.
-// It self-suspends while the user interacts, while any camera animation is
-// running, while a job is selected, or when zoomed in past globe scale —
-// and resumes on its own the moment conditions clear.
+// Seamless idle rotation: a per-frame loop that advances longitude westward,
+// so the globe turns the way the real Earth does (terrain drifts west→east).
+// Rather than a pause timer armed at gesture *start* (which expired mid-drag
+// and made the globe lurch on release), every frame of pointer contact or
+// camera motion — drags, inertia, easeTo/flyTo — refreshes an idle stamp,
+// and the spin resumes only once everything has been still for SPIN_IDLE_MS.
 function spinLoop(t) {
   requestAnimationFrame(spinLoop);
   const dt = Math.min((t - spinLastT) / 1000, 0.1);
   spinLastT = t;
-  if (!map || spinPaused || dossierId != null) return;
-  if (map.getZoom() > 4 || map.isMoving()) return;
+  if (!map) return;
+  if (dossierId != null || spinPointerDown || map.isMoving()) { spinLastInteract = t; return; }
+  if (t - spinLastInteract < SPIN_IDLE_MS) return;
+  if (map.getZoom() > 4) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = map.getCenter();
-  map.setCenter([c.lng + SPIN_DEG_PER_SEC * dt, c.lat]);
+  map.setCenter([c.lng - SPIN_DEG_PER_SEC * dt, c.lat]);
 }
 
-function pauseSpin() {
-  spinPaused = true;
-  clearTimeout(spinResumeTimer);
-  spinResumeTimer = setTimeout(() => { spinPaused = false; }, 6000);
-}
+function noteSpinInteract() { spinLastInteract = performance.now(); }
 
 function mapped() { return state.apps.filter((a) => a.latitude !== '' && a.longitude !== '' && a.latitude != null); }
 
@@ -201,9 +202,15 @@ function buildMapOnce(el) {
     });
     map.on('mouseenter', 'pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'pins', () => { map.getCanvas().style.cursor = ''; });
-    // Any user gesture pauses the idle rotation for a few seconds.
-    for (const ev of ['mousedown', 'touchstart', 'wheel', 'dragstart']) {
-      map.getCanvas().addEventListener(ev, pauseSpin, { passive: true });
+    // Any user gesture holds the idle rotation until 3 s after it ends.
+    // Pointer events cover mouse + touch; a held pointer pauses indefinitely.
+    const canvas = map.getCanvas();
+    canvas.addEventListener('pointerdown', () => { spinPointerDown = true; noteSpinInteract(); }, { passive: true });
+    for (const ev of ['pointerup', 'pointercancel', 'blur']) {
+      window.addEventListener(ev, () => { spinPointerDown = false; noteSpinInteract(); }, { passive: true });
+    }
+    for (const ev of ['wheel', 'keydown']) {
+      canvas.addEventListener(ev, noteSpinInteract, { passive: true });
     }
     requestAnimationFrame(spinLoop);
     map.resize();
