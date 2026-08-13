@@ -125,9 +125,24 @@ export function toggleMusic() {
   return enabled;
 }
 
-// If music was left on, begin at the first user gesture (autoplay policy).
-if (enabled) {
+// Begin as eagerly as the browser allows: some browsers permit autoplay
+// for sites the user has engaged with before — try that first, otherwise
+// start at the first gesture.
+function armGestureStart() {
   const kick = () => { if (enabled) start(); };
   window.addEventListener('pointerdown', kick, { once: true });
   window.addEventListener('keydown', kick, { once: true });
+  window.addEventListener('touchstart', kick, { once: true, passive: true });
+}
+
+if (enabled) {
+  try {
+    if (!ctx) setup();
+    ctx.resume().catch(() => {}).finally(() => {
+      if (ctx.state === 'running') start();
+      else armGestureStart();
+    });
+  } catch (e) {
+    armGestureStart();
+  }
 }

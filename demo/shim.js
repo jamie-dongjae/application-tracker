@@ -2,10 +2,13 @@
 // bundled sample data, entirely in memory. Loaded (as a classic script)
 // before the app's module scripts so the override is in place first.
 (function () {
-  // Demo defaults: ambient music on (it starts at the visitor's first
-  // click/keypress — browsers forbid audio before a user gesture).
+  // Showcase defaults, enforced on every visit: dark theme, music on,
+  // land on the space globe. In-session toggles still work; stale
+  // preferences from earlier visits must not dull the first impression.
   window.APPTRACKER_DEFAULTS = { music: true };
-  // The demo's first sight is the space globe.
+  localStorage.setItem('apptracker-theme', 'dark');
+  localStorage.setItem('apptracker-music', '1');
+  document.documentElement.dataset.theme = 'dark';
   if (!location.hash) location.hash = '#/map';
   const realFetch = window.fetch.bind(window);
   let db = null;
