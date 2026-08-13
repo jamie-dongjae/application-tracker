@@ -17,6 +17,9 @@ import webbrowser
 def find_free_port(start: int) -> int:
     for port in range(start, start + 50):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            # Mirror uvicorn's bind semantics: a port in TIME_WAIT from a
+            # recent restart is still usable, so don't drift away from it.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 sock.bind(("127.0.0.1", port))
                 return port

@@ -31,6 +31,15 @@ I built this in the middle of my own job search: a hundred-plus applications acr
 
 Requires Python ≥ 3.10.
 
+**The easy way** — clone (or download) the repo, then:
+
+- **macOS**: double-click **`start.command`** (first time: right-click → Open if macOS asks)
+- **Windows**: double-click **`start.bat`**
+
+The first launch builds its own environment in about a minute; every launch after that just opens the app in your browser. If it's already running, the launcher simply brings it up again.
+
+**The terminal way:**
+
 ```bash
 git clone https://github.com/jamie-dongjae/application-tracker && cd application-tracker
 python3 -m venv .venv && source .venv/bin/activate
@@ -38,7 +47,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-That's it — the server starts on `127.0.0.1` and opens your browser.
+Either way the server binds to `127.0.0.1` only — nothing is exposed to the network.
 
 **You don't need to bring any Excel file.** On first run the app creates `data/tracker.xlsx` with the right sheets and columns, and every change you make is saved into it. It stays an ordinary workbook you can open, sort, and filter in Excel. Optional: `python scripts/make_sample_data.py` fills it with 30 fictional rows to explore first.
 
