@@ -15,10 +15,10 @@ def build_legacy_file(path):
                "Work Type", "Salary Min (€)", "Salary Max (€)", "Source",
                "Work Permit / Sponsorship", "Referral Contact", "Job Posting URL",
                "Applicant Portal", "Last Updated", "Notes"])
-    ws.append([1, "Adyen", "Data Analyst", datetime(2026, 4, 8), "rejected",
+    ws.append([1, "Northwind", "Data Analyst", datetime(2026, 4, 8), "rejected",
                "Amsterdam, Netherlands", "Hybrid", 55000, 70000, "LinkedIn",
                "Recognised sponsor", "", "https://example.com/job/1", "", "", "Note A"])
-    ws.append([None, "ASML", "ML Engineer", "2026-05-16T00:00:00.000Z", "Applied",
+    ws.append([None, "Bluefjord", "ML Engineer", "2026-05-16T00:00:00.000Z", "Applied",
                "", "", None, None, "", "", "", "https://example.com/job/2", "", "", 85])
     ws.append([None, "", "", None, "", "", "", None, None, "", "", "", "", "", "", ""])  # blank
 
@@ -38,7 +38,7 @@ def test_read_legacy(tmp_path):
     data = read_legacy_workbook(src)
     assert len(data["applications"]) == 2
     first, second = data["applications"]
-    assert first["company"] == "Adyen"
+    assert first["company"] == "Northwind"
     assert first["date_applied"] == "2026-04-08"
     assert first["status"] == "Rejected"          # canonicalized casing
     assert first["geo_status"] == "pending"       # has location, no coords

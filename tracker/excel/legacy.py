@@ -1,4 +1,4 @@
-"""One-time importer for legacy (JAMIE-era) workbooks.
+"""One-time importer for legacy workbooks (the pre-rebuild spreadsheet format).
 
 Legacy shape: emoji sheet names ("💼 Job Applications"), a title row above the
 headers, free-form column names. The source file is opened read-only and never

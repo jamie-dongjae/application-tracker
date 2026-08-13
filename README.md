@@ -2,6 +2,8 @@
 
 Local-first job application tracker. Paste a posting URL — company, title, location, and sponsorship signals are prefilled from the posting itself. Your data lives in a plain Excel workbook on your disk. No accounts, no cloud, no cost.
 
+I built this in the middle of my own job search: a hundred-plus applications across two countries had outgrown my spreadsheet, but I didn't want to abandon the spreadsheet — so I grew a product around it. Everything here exists because I needed it that week.
+
 ![CI](https://github.com/OWNER/application-tracker/actions/workflows/ci.yml/badge.svg)
 
 ![Dashboard](docs/screenshots/dashboard.png)

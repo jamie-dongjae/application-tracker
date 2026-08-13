@@ -1,7 +1,7 @@
 """Workbook schema v3: sheet layout, columns, and styling for a fresh tracker file.
 
 The app owns this format (headers on row 1, no emoji sheet names). Legacy
-JAMIE-era workbooks are converted once by `tracker.excel.legacy`.
+Legacy-format workbooks are converted once by `tracker.excel.legacy`.
 """
 from __future__ import annotations
 

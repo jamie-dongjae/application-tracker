@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import a legacy (JAMIE-era) tracker workbook into a fresh Application Tracker workbook.
+"""Import a legacy tracker workbook (the pre-rebuild spreadsheet format) into a fresh Application Tracker workbook.
 
     python scripts/import_legacy.py --in "/path/to/Old_Tracker.xlsx" [--out data/tracker.xlsx] [--force]
 
