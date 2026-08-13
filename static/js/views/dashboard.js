@@ -27,7 +27,7 @@ export function renderDashboard(el) {
   const C = 2 * Math.PI * 26;
 
   const stale = apps
-    .filter((a) => ['Applied', 'Phone Screen', 'Technical', 'Onsite'].includes(a.status))
+    .filter((a) => ['Applied', 'Interview'].includes(a.status))
     .map((a) => ({ ...a, idle: daysSince(a.last_updated || a.date_applied) ?? 0 }))
     .filter((a) => a.idle >= staleDays)
     .sort((x, y) => y.idle - x.idle)

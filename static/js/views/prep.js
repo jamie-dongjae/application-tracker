@@ -1,4 +1,4 @@
-// Interview Prep: STAR question bank grouped by category, with add/edit.
+// Interview Prep: question → answer bank grouped by category.
 
 import { api } from '../api.js';
 import { state, refreshPrep, undo, esc } from '../state.js';
@@ -26,24 +26,17 @@ export function renderPrep(el) {
           <details class="prep-item">
             <summary>
               <span style="flex:1">${esc(item.question)}</span>
-              ${item.subcategory ? `<span class="status-chip">${esc(item.subcategory)}</span>` : ''}
               <span class="prep-tools">
                 <button data-edit="${item.id}" title="Edit">edit</button>
                 <button data-del="${item.id}" title="Delete">del</button>
               </span>
             </summary>
             <div class="prep-body">
-              <div class="star-grid">
-                ${starRow('S — Situation', item.situation)}
-                ${starRow('T — Task', item.task)}
-                ${starRow('A — Action', item.action)}
-                ${starRow('R — Result', item.result)}
-                ${item.tips ? starRow('Tips', item.tips) : ''}
-              </div>
+              <div class="prep-answer">${esc(item.answer) || '<span class="faint">No answer yet.</span>'}</div>
             </div>
           </details>`).join('')}
       </div>`).join('') || `<div class="empty" style="padding:60px 0">
-        No prep questions yet. Add your first STAR story.</div>`}`;
+        No prep questions yet. Add your first one.</div>`}`;
 
   el.querySelector('#prep-add').onclick = () => openPrepModal();
   el.querySelectorAll('[data-edit]').forEach((btn) => {
@@ -67,11 +60,6 @@ export function renderPrep(el) {
   });
 }
 
-function starRow(key, value) {
-  if (value == null) value = '';
-  return `<div class="star-key">${esc(key)}</div><div class="star-val">${esc(value) || '<span class="faint">—</span>'}</div>`;
-}
-
 function openPrepModal(item) {
   const isEdit = !!item;
   const val = (k) => esc(item?.[k] ?? '');
@@ -84,14 +72,9 @@ function openPrepModal(item) {
         </div>
         <div class="modal-body">
           <div class="form-grid">
-            <div class="field"><label>Category *</label><input name="category" value="${val('category')}" placeholder="Behavioral"></div>
-            <div class="field"><label>Sub-category</label><input name="subcategory" value="${val('subcategory')}"></div>
+            <div class="field"><label>Category *</label><input name="category" value="${val('category')}" placeholder="Behavioral, Technical, Motivation…"></div>
             <div class="field full"><label>Question *</label><input name="question" value="${val('question')}"></div>
-            <div class="field full"><label>Situation</label><textarea name="situation" rows="2">${val('situation')}</textarea></div>
-            <div class="field full"><label>Task</label><textarea name="task" rows="2">${val('task')}</textarea></div>
-            <div class="field full"><label>Action</label><textarea name="action" rows="2">${val('action')}</textarea></div>
-            <div class="field full"><label>Result</label><textarea name="result" rows="2">${val('result')}</textarea></div>
-            <div class="field full"><label>Tips</label><textarea name="tips" rows="2">${val('tips')}</textarea></div>
+            <div class="field full"><label>Answer</label><textarea name="answer" rows="7" placeholder="Your answer — bullet points or a short story.">${val('answer')}</textarea></div>
           </div>
         </div>
         <div class="modal-foot">
@@ -109,9 +92,7 @@ function openPrepModal(item) {
   modalRoot.querySelector('[name="category"]').focus();
   modalRoot.querySelector('[data-save]').onclick = async () => {
     const read = (k) => modalRoot.querySelector(`[name="${k}"]`).value.trim();
-    const payload = Object.fromEntries(
-      ['category', 'subcategory', 'question', 'situation', 'task', 'action', 'result', 'tips']
-        .map((k) => [k, read(k)]));
+    const payload = { category: read('category'), question: read('question'), answer: read('answer') };
     if (!payload.category || !payload.question) {
       toast('Category and question are required.', { error: true });
       return;

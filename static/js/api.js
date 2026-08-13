@@ -38,7 +38,7 @@ async function request(method, path, body) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (err) {
-    showBanner('Server unreachable — is Waypoint still running?', 'Retry', () => location.reload());
+    showBanner('Server unreachable — is the app still running?', 'Retry', () => location.reload());
     throw err;
   }
   let data = null;

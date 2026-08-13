@@ -2,8 +2,8 @@ from datetime import date, datetime
 
 from openpyxl import Workbook
 
-from waypoint.excel.legacy import import_legacy_workbook, read_legacy_workbook
-from waypoint.excel.store import ExcelStore
+from tracker.excel.legacy import import_legacy_workbook, read_legacy_workbook
+from tracker.excel.store import ExcelStore
 
 
 def build_legacy_file(path):
@@ -41,13 +41,31 @@ def test_read_legacy(tmp_path):
     assert first["company"] == "Adyen"
     assert first["date_applied"] == "2026-04-08"
     assert first["status"] == "Rejected"          # canonicalized casing
-    assert first["currency"] == "EUR"             # defaulted because salary present
     assert first["geo_status"] == "pending"       # has location, no coords
     assert second["date_applied"] == "2026-05-16"  # SheetJS ISO string
     assert second["notes"] == "85"                 # stray numeric note cast to str
     assert second.get("geo_status", "") == ""      # no location
     assert len(data["prep"]) == 1
-    assert data["prep"][0]["tips"] == "Be concise"
+    # STAR columns collapse into a single labeled answer
+    answer = data["prep"][0]["answer"]
+    assert answer.startswith("Situation: S")
+    assert answer.endswith("Tips: Be concise")
+
+
+def test_legacy_stage_names_collapse(tmp_path):
+    from openpyxl import Workbook
+
+    path = tmp_path / "stages.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "💼 Job Applications"
+    ws.append(["#", "Company", "Job Title", "Date Applied", "Status"])
+    ws.append([1, "Acme", "Analyst", "2026-05-01", "Phone Screen"])
+    ws.append([2, "Beta", "Engineer", "2026-05-02", "onsite"])
+    wb.save(path)
+
+    data = read_legacy_workbook(path)
+    assert [r["status"] for r in data["applications"]] == ["Interview", "Interview"]
 
 
 def test_import_into_store(tmp_path):

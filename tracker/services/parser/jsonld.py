@@ -71,34 +71,6 @@ def _format_location(node: dict) -> str:
     return ""
 
 
-def _extract_salary(node: dict) -> dict | None:
-    base = node.get("baseSalary")
-    if not isinstance(base, dict):
-        return None
-    value = base.get("value")
-    if not isinstance(value, dict):
-        value = base
-    low = value.get("minValue") or value.get("value")
-    high = value.get("maxValue")
-    unit = str(value.get("unitText") or "YEAR").upper()
-    try:
-        low = float(low) if low is not None else None
-        high = float(high) if high is not None else None
-    except (TypeError, ValueError):
-        return None
-    if low is None:
-        return None
-    warnings = []
-    if unit == "MONTH":
-        low, high = low * 12, high * 12 if high else None
-        warnings.append("Salary was listed per month — converted to yearly (×12).")
-    elif unit == "HOUR":
-        return None
-    currency = str(base.get("currency") or node.get("salaryCurrency") or "").upper()
-    return {"salary_min": round(low), "salary_max": round(high) if high else None,
-            "currency": currency, "warnings": warnings}
-
-
 def extract(html: str) -> dict | None:
     """Return prefill fields from the first JobPosting node, or None."""
     node = find_jobposting(html)
@@ -124,11 +96,6 @@ def extract(html: str) -> dict | None:
     if employment and not fields.get("work_type"):
         as_text = " ".join(employment) if isinstance(employment, list) else str(employment)
         fields["work_type"] = detect_work_type(as_text)
-
-    salary = _extract_salary(node)
-    if salary:
-        warnings.extend(salary.pop("warnings"))
-        fields.update({k: v for k, v in salary.items() if v})
 
     description = html_to_text(str(node.get("description") or ""))
     if description:

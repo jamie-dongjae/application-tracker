@@ -1,6 +1,6 @@
 from tests.conftest import fixture_text
-from waypoint.services.fetcher import classify_blocked
-from waypoint.services.parser import meta_tags
+from tracker.services.fetcher import classify_blocked
+from tracker.services.parser import meta_tags
 
 
 def test_og_title_at_pattern():

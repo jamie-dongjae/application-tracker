@@ -56,7 +56,7 @@ def detect(url: str) -> AtsRef | None:
         if len(parts) >= 2:
             org = parts[0]
             return AtsRef("ashby",
-                          f"https://api.ashbyhq.com/posting-api/job-board/{org}?includeCompensation=true",
+                          f"https://api.ashbyhq.com/posting-api/job-board/{org}",
                           company_hint=_prettify(org), job_hint=parts[1])
 
     if host == "apply.workable.com":
@@ -128,17 +128,6 @@ def parse_lever(payload: dict, ref: AtsRef) -> dict:
         "_description_text": clean_ws(payload.get("descriptionPlain") or "") or
                              html_to_text(payload.get("description") or ""),
     }
-    salary = payload.get("salaryRange") or {}
-    if isinstance(salary, dict) and salary.get("min"):
-        interval = str(salary.get("interval") or "").lower()
-        mult = 12 if "month" in interval else 1
-        try:
-            fields["salary_min"] = round(float(salary["min"]) * mult)
-            if salary.get("max"):
-                fields["salary_max"] = round(float(salary["max"]) * mult)
-            fields["currency"] = str(salary.get("currency") or "").upper()
-        except (TypeError, ValueError):
-            pass
     return fields
 
 
@@ -162,16 +151,6 @@ def parse_ashby(payload: dict, ref: AtsRef) -> dict | None:
         "_description_text": html_to_text(target.get("descriptionHtml") or "") or
                              clean_ws(target.get("descriptionPlain") or ""),
     }
-    comp = target.get("compensation") or {}
-    tiers = comp.get("summaryComponents") or []
-    for tier in tiers:
-        if str(tier.get("compensationType")) == "Salary":
-            try:
-                fields["salary_min"] = round(float(tier.get("minValue")))
-                fields["salary_max"] = round(float(tier.get("maxValue")))
-                fields["currency"] = str(tier.get("currencyCode") or "").upper()
-            except (TypeError, ValueError):
-                pass
     return fields
 
 

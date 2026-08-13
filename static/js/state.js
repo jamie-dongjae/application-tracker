@@ -2,22 +2,23 @@
 
 import { api } from './api.js';
 
-export const STATUSES = ['Wishlist', 'Applied', 'Phone Screen', 'Technical', 'Onsite', 'Offer', 'Rejected', 'Withdrawn'];
-export const BOARD_STATUSES = STATUSES.slice(0, 6);
+export const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected', 'Withdrawn'];
+export const BOARD_STATUSES = STATUSES.slice(0, 4);
 export const CLOSED_STATUSES = ['Rejected', 'Withdrawn'];
-export const ACTIVE_STATUSES = ['Applied', 'Phone Screen', 'Technical', 'Onsite', 'Offer'];
+export const ACTIVE_STATUSES = ['Applied', 'Interview', 'Offer'];
 export const WORK_TYPES = ['', 'Onsite', 'Hybrid', 'Remote'];
 
 export const STATUS_COLORS = {
   'Wishlist': 'var(--s-wishlist)',
   'Applied': 'var(--s-applied)',
-  'Phone Screen': 'var(--s-screen)',
-  'Technical': 'var(--s-technical)',
-  'Onsite': 'var(--s-onsite)',
+  'Interview': 'var(--s-screen)',
   'Offer': 'var(--s-offer)',
   'Rejected': 'var(--s-rejected)',
   'Withdrawn': 'var(--s-withdrawn)',
 };
+
+// Next stage on the "advance" quick action (Offer is the end of the line).
+export const NEXT_STATUS = { 'Wishlist': 'Applied', 'Applied': 'Interview', 'Interview': 'Offer' };
 
 export const state = {
   apps: [],
@@ -118,12 +119,6 @@ export function daysSince(iso) {
 export function fmtDate(iso) {
   if (!iso) return '—';
   return String(iso).slice(0, 10);
-}
-
-export function fmtMoney(value, currency) {
-  if (value === '' || value == null) return '';
-  const sign = { EUR: '€', USD: '$', GBP: '£' }[currency] || (currency ? currency + ' ' : '');
-  return sign + Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
 export function esc(text) {

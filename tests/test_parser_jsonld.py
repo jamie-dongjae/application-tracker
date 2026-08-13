@@ -1,5 +1,5 @@
 from tests.conftest import fixture_text
-from waypoint.services.parser import jsonld
+from tracker.services.parser import jsonld
 
 
 def test_extract_jobposting_from_graph():
@@ -9,10 +9,6 @@ def test_extract_jobposting_from_graph():
     assert fields["company"] == "Acme Fintech"
     assert fields["location"] == "Amsterdam, North Holland, NL"
     assert fields["work_type"] == "Remote"           # TELECOMMUTE
-    assert fields["salary_min"] == 4500 * 12          # MONTH → yearly
-    assert fields["salary_max"] == 6000 * 12
-    assert fields["currency"] == "EUR"
-    assert any("month" in w.lower() for w in fields["_warnings"])
     assert "visa sponsorship" in fields["_description_text"].lower()
 
 

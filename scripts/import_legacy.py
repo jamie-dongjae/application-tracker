@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import a legacy (JAMIE-era) tracker workbook into a fresh Waypoint workbook.
+"""Import a legacy (JAMIE-era) tracker workbook into a fresh Application Tracker workbook.
 
     python scripts/import_legacy.py --in "/path/to/Old_Tracker.xlsx" [--out data/tracker.xlsx] [--force]
 
@@ -13,14 +13,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from waypoint.excel.legacy import import_legacy_workbook  # noqa: E402
-from waypoint.excel.store import ExcelStore  # noqa: E402
+from tracker.excel.legacy import import_legacy_workbook  # noqa: E402
+from tracker.excel.store import ExcelStore  # noqa: E402
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--in", dest="src", required=True, help="legacy workbook to read")
-    ap.add_argument("--out", default="data/tracker.xlsx", help="Waypoint workbook to create/extend")
+    ap.add_argument("--out", default="data/tracker.xlsx", help="Application Tracker workbook to create/extend")
     ap.add_argument("--force", action="store_true", help="allow importing into an existing workbook")
     args = ap.parse_args()
 

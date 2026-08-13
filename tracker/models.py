@@ -13,9 +13,6 @@ class ApplicationIn(BaseModel):
     date_applied: Optional[str] = None  # yyyy-mm-dd
     location: str = ""
     work_type: str = ""
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    currency: str = ""
     source: str = ""
     sponsorship: str = ""
     referral: str = ""
@@ -34,9 +31,6 @@ class ApplicationPatch(BaseModel):
     date_applied: Optional[str] = None
     location: Optional[str] = None
     work_type: Optional[str] = None
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    currency: Optional[str] = None
     source: Optional[str] = None
     sponsorship: Optional[str] = None
     referral: Optional[str] = None
@@ -50,24 +44,14 @@ class ApplicationPatch(BaseModel):
 
 class PrepIn(BaseModel):
     category: str = Field(min_length=1)
-    subcategory: str = ""
     question: str = Field(min_length=1)
-    situation: str = ""
-    task: str = ""
-    action: str = ""
-    result: str = ""
-    tips: str = ""
+    answer: str = ""
 
 
 class PrepPatch(BaseModel):
     category: Optional[str] = None
-    subcategory: Optional[str] = None
     question: Optional[str] = None
-    situation: Optional[str] = None
-    task: Optional[str] = None
-    action: Optional[str] = None
-    result: Optional[str] = None
-    tips: Optional[str] = None
+    answer: Optional[str] = None
 
 
 class PrefillRequest(BaseModel):

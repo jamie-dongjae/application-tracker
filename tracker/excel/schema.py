@@ -1,7 +1,7 @@
-"""Workbook schema v2: sheet layout, columns, and styling for a fresh tracker file.
+"""Workbook schema v3: sheet layout, columns, and styling for a fresh tracker file.
 
 The app owns this format (headers on row 1, no emoji sheet names). Legacy
-JAMIE-era workbooks are converted once by `waypoint.excel.legacy`.
+JAMIE-era workbooks are converted once by `tracker.excel.legacy`.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SHEET_APPS = "Applications"
 SHEET_PREP = "Interview Prep"
@@ -21,14 +21,14 @@ SHEET_META = "Meta"
 STATUSES = [
     "Wishlist",
     "Applied",
-    "Phone Screen",
-    "Technical",
-    "Onsite",
+    "Interview",
     "Offer",
     "Rejected",
     "Withdrawn",
 ]
-ACTIVE_STATUSES = ["Applied", "Phone Screen", "Technical", "Onsite", "Offer"]
+ACTIVE_STATUSES = ["Applied", "Interview", "Offer"]
+# Pre-v3 stage names collapse into "Interview" (also used by the legacy importer).
+STATUS_MIGRATE = {"Phone Screen": "Interview", "Technical": "Interview", "Onsite": "Interview"}
 WORK_TYPES = ["Onsite", "Hybrid", "Remote"]
 GEO_STATUSES = ["ok", "pending", "failed", "remote", "manual"]
 
@@ -41,9 +41,6 @@ APP_COLUMNS = [
     ("Date Applied", "date_applied", 13, "yyyy-mm-dd"),
     ("Location", "location", 24, None),
     ("Work Type", "work_type", 10, None),
-    ("Salary Min", "salary_min", 11, "#,##0"),
-    ("Salary Max", "salary_max", 11, "#,##0"),
-    ("Currency", "currency", 9, None),
     ("Source", "source", 14, None),
     ("Sponsorship", "sponsorship", 16, None),
     ("Referral", "referral", 14, None),
@@ -58,19 +55,14 @@ APP_COLUMNS = [
 
 PREP_COLUMNS = [
     ("ID", "id", 6, "0"),
-    ("Category", "category", 16, None),
-    ("Sub-Category", "subcategory", 16, None),
-    ("Question", "question", 44, None),
-    ("Situation", "situation", 40, None),
-    ("Task", "task", 40, None),
-    ("Action", "action", 40, None),
-    ("Result", "result", 40, None),
-    ("Tips", "tips", 40, None),
+    ("Category", "category", 18, None),
+    ("Question", "question", 50, None),
+    ("Answer", "answer", 90, None),
 ]
 
 APP_KEYS = [k for _, k, _, _ in APP_COLUMNS]
 PREP_KEYS = [k for _, k, _, _ in PREP_COLUMNS]
-NUMERIC_KEYS = {"salary_min", "salary_max", "latitude", "longitude"}
+NUMERIC_KEYS = {"latitude", "longitude"}
 
 _HEADER_FILL = PatternFill("solid", start_color="FF101828")
 _HEADER_FONT = Font(name="Calibri", bold=True, color="FFE8EEF9", size=11)
@@ -123,7 +115,7 @@ def init_workbook() -> Workbook:
             "next_app_id": 1,
             "next_prep_id": 1,
             "created_at": datetime.now().isoformat(timespec="seconds"),
-            "generator": "waypoint",
+            "generator": "application-tracker",
         },
     )
     return wb

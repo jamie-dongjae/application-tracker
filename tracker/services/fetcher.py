@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 import httpx
 
 USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-              "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 waypoint-tracker/1.0")
+              "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 application-tracker/1.0")
 
 TIMEOUT = httpx.Timeout(12.0, connect=6.0)
 

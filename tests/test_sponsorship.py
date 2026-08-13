@@ -1,6 +1,6 @@
 import pytest
 
-from waypoint.services.parser import sponsorship
+from tracker.services.parser import sponsorship
 
 
 @pytest.mark.parametrize("text", [

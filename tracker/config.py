@@ -12,13 +12,13 @@ SETTINGS_DEFAULTS = {"weekly_goal": 5, "stale_days": 14, "theme": "dark"}
 
 
 def data_dir() -> Path:
-    d = Path(os.environ.get("WAYPOINT_DATA_DIR", REPO_ROOT / "data"))
+    d = Path(os.environ.get("TRACKER_DATA_DIR", REPO_ROOT / "data"))
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def xlsx_path() -> Path:
-    return Path(os.environ.get("WAYPOINT_XLSX", data_dir() / "tracker.xlsx"))
+    return Path(os.environ.get("TRACKER_XLSX", data_dir() / "tracker.xlsx"))
 
 
 def geocode_cache_path() -> Path:

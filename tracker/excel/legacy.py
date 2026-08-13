@@ -11,7 +11,7 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from .schema import STATUSES
+from .schema import STATUS_MIGRATE, STATUSES
 from .store import ExcelStore, coerce_date
 
 # Ordered (pattern, key) — first match wins. Patterns test the normalized header.
@@ -22,8 +22,6 @@ APP_ALIASES = [
     (r"^status$", "status"),
     (r"^location$|^city$", "location"),
     (r"^work ?(type|mode)$|^arrangement$", "work_type"),
-    (r"^salary min", "salary_min"),
-    (r"^salary max", "salary_max"),
     (r"^source$", "source"),
     (r"sponsorship|work permit|^visa", "sponsorship"),
     (r"^referral", "referral"),
@@ -47,6 +45,7 @@ PREP_ALIASES = [
 ]
 
 _CANON_STATUS = {s.lower(): s for s in STATUSES}
+_CANON_STATUS.update({old.lower(): new for old, new in STATUS_MIGRATE.items()})
 
 
 def _norm_header(value) -> str:
@@ -105,8 +104,6 @@ def read_legacy_workbook(src: Path) -> dict:
                 status = str(rec.get("status") or "").strip()
                 rec["status"] = _CANON_STATUS.get(status.lower(), status or "Applied")
                 rec["notes"] = str(rec.get("notes") or "").strip()
-                if rec.get("salary_min") or rec.get("salary_max"):
-                    rec.setdefault("currency", "EUR")
                 if rec.get("latitude") and rec.get("longitude"):
                     rec["geo_status"] = "ok"
                 elif str(rec.get("location") or "").strip():
@@ -120,10 +117,22 @@ def read_legacy_workbook(src: Path) -> dict:
             rec = {mapping[c.column]: c.value for c in row
                    if getattr(c, "column", None) in mapping and c.value is not None}
             if str(rec.get("question") or "").strip():
-                prep.append(rec)
+                prep.append(_flatten_prep(rec))
 
     wb.close()
     return {"applications": apps, "prep": prep, "warnings": warnings}
+
+
+def _flatten_prep(rec: dict) -> dict:
+    """Collapse legacy STAR columns into a single answer."""
+    parts = []
+    for key, label in (("situation", "Situation"), ("task", "Task"),
+                       ("action", "Action"), ("result", "Result"), ("tips", "Tips")):
+        value = str(rec.get(key) or "").strip()
+        if value:
+            parts.append(f"{label}: {value}")
+    return {"category": rec.get("category"), "question": rec.get("question"),
+            "answer": "\n".join(parts)}
 
 
 def import_legacy_workbook(src: Path, store: ExcelStore) -> dict:

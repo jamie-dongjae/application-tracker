@@ -17,7 +17,7 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 def create_app(store: ExcelStore | None = None, history: History | None = None,
                geocoder: Geocoder | None = None) -> FastAPI:
-    app = FastAPI(title="Waypoint", version="1.0.0",
+    app = FastAPI(title="Application Tracker", version="1.0.0",
                   description="Local-first job application tracker with an Excel backend.")
 
     app.state.store = store or ExcelStore(config.xlsx_path())

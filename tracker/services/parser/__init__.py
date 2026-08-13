@@ -9,10 +9,9 @@ from __future__ import annotations
 from datetime import date
 
 from .. import fetcher
-from . import ats, jsonld, meta_tags, salary, sponsorship, text_heuristics
+from . import ats, jsonld, meta_tags, sponsorship, text_heuristics
 
-FIELD_KEYS = ["company", "title", "location", "work_type", "salary_min", "salary_max",
-              "currency", "source", "sponsorship"]
+FIELD_KEYS = ["company", "title", "location", "work_type", "source", "sponsorship"]
 
 _METHOD_LABELS = {
     "greenhouse": "Greenhouse API", "lever": "Lever API", "ashby": "Ashby API",
@@ -42,11 +41,6 @@ def _finish(fields: dict, provenance: dict, warnings: list, method: str,
             provenance.setdefault("source", "URL")
 
     if description:
-        if not fields.get("salary_min"):
-            found = salary.parse(description)
-            if found:
-                warnings.extend(found.pop("warnings"))
-                _merge(fields, provenance, found, "Description scan")
         sponsor = sponsorship.scan(description)
         if sponsor and not fields.get("sponsorship"):
             fields["sponsorship"] = sponsor["value"]

@@ -38,16 +38,14 @@
     fields: {
       company: 'Northwind Analytics', title: 'Senior Data Analyst',
       location: 'Amsterdam, Netherlands', work_type: 'Hybrid',
-      salary_min: 58000, salary_max: 72000, currency: 'EUR',
       source: 'Company site', sponsorship: 'Mentioned',
       date_applied: new Date().toISOString().slice(0, 10),
     },
     provenance: {
-      company: 'Demo', title: 'Demo', location: 'Demo', work_type: 'Demo',
-      salary_min: 'Demo', salary_max: 'Demo', currency: 'Demo', sponsorship: 'Demo',
+      company: 'Demo', title: 'Demo', location: 'Demo', work_type: 'Demo', sponsorship: 'Demo',
     },
     method: 'Demo mode',
-    warnings: ['Static demo: these are canned values. Run Waypoint locally for real posting parsing.'],
+    warnings: ['Static demo: these are canned values. Run the app locally for real posting parsing.'],
     evidence: { sponsorship_snippet: '…we are a recognised sponsor and offer visa sponsorship…' },
   };
 

@@ -3,7 +3,7 @@ import json
 import pytest
 
 from tests.conftest import fixture_text
-from waypoint.services.parser import ats
+from tracker.services.parser import ats
 
 
 @pytest.mark.parametrize("url,kind,api_fragment", [
@@ -58,9 +58,7 @@ def test_parse_lever():
     fields = ats.parse_lever(payload, ref)
     assert fields["title"] == "Machine Learning Engineer"
     assert fields["work_type"] == "Hybrid"
-    assert fields["salary_min"] == 65000
-    assert fields["salary_max"] == 85000
-    assert fields["currency"] == "EUR"
+    assert fields["location"] == "Amsterdam, Netherlands"
 
 
 def test_parse_ashby_selects_right_job():
@@ -69,8 +67,7 @@ def test_parse_ashby_selects_right_job():
                      job_hint="f47ac10b-58cc-4372-a567-0e02b2c3d479")
     fields = ats.parse_ashby(payload, ref)
     assert fields["title"] == "Backend Engineer"
-    assert fields["salary_min"] == 70000
-    assert fields["currency"] == "EUR"
+    assert fields["location"] == "Berlin"
 
 
 def test_parse_workable():

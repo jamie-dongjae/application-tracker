@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-USER_AGENT = "waypoint-job-tracker/1.0 (https://github.com/waypoint-tracker)"
+USER_AGENT = "application-tracker/1.0 (https://github.com/application-tracker)"
 RATE_SECONDS = 1.1
 
 _REMOTE = re.compile(r"^\s*(fully\s+)?remote\b|\bwork\s+from\s+(home|anywhere)\b|^\s*wfh\s*$", re.I)

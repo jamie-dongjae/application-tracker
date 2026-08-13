@@ -1,5 +1,5 @@
 /* ============================================================
-   Waypoint — design system
+   Application Tracker — design system
    Refined mission control: deep navy, one cyan accent,
    mono numerals, hairline borders. No decoration.
    ============================================================ */
@@ -134,8 +134,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .brand-name {
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: .18em;
+  font-size: 12px;
+  letter-spacing: .13em;
+  white-space: nowrap;
 }
 
 .nav {
@@ -304,7 +305,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
   gap: 12px;
   align-items: start;
 }
@@ -881,17 +882,12 @@ textarea { resize: vertical; min-height: 64px; }
 
 .prep-body { padding: 4px 16px 14px; }
 
-.star-grid { display: grid; grid-template-columns: 84px 1fr; gap: 8px 14px; font-size: 13px; }
-
-.star-key {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: .12em;
-  color: var(--accent);
-  padding-top: 2px;
+.prep-answer {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
-
-.star-val { color: var(--text-dim); white-space: pre-wrap; }
 
 .prep-tools { display: flex; gap: 6px; margin-left: auto; }
 
@@ -927,7 +923,7 @@ hr.sep { border: 0; border-top: 1px solid var(--line-soft); margin: 14px 0; }
 @media (max-width: 1000px) {
   .grid-kpi { grid-template-columns: repeat(2, 1fr); }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  .board { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+  .board { grid-template-columns: repeat(2, minmax(190px, 1fr)); }
   .map-side { display: none; }
   .map-dossier { width: min(320px, 86vw); }
 }
@@ -937,4 +933,73 @@ hr.sep { border: 0; border-top: 1px solid var(--line-soft); margin: 14px 0; }
   .brand-name { display: none; }
   .board { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
   .form-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- status quick actions + effects ---------- */
+
+.card-actions {
+  display: none;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.card:hover .card-actions { display: flex; }
+
+.card-btn {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-btn.adv:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+.card-btn.rej { flex: 0 0 auto; }
+
+.card-btn.rej:hover {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.card-btn:not(.adv):not(.rej):hover { color: var(--text); border-color: var(--text-faint); }
+
+.fx-advance { animation: fx-advance .7s ease; }
+
+@keyframes fx-advance {
+  0% { box-shadow: 0 0 0 0 rgba(77, 214, 255, .55); }
+  100% { box-shadow: 0 0 0 16px rgba(77, 214, 255, 0); }
+}
+
+.fx-offer { animation: fx-offer .9s ease; }
+
+@keyframes fx-offer {
+  0% { box-shadow: 0 0 0 0 rgba(70, 201, 141, .6); border-color: var(--s-offer); }
+  100% { box-shadow: 0 0 0 22px rgba(70, 201, 141, 0); }
+}
+
+.fx-reject { animation: fx-reject .5s ease; }
+
+@keyframes fx-reject {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+  0% { box-shadow: 0 0 0 0 rgba(224, 92, 110, .5); }
+  99% { box-shadow: 0 0 0 14px rgba(224, 92, 110, 0); }
+}
+
+.fx-particle {
+  position: fixed;
+  z-index: 300;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  pointer-events: none;
 }

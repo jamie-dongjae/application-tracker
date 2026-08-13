@@ -1,7 +1,7 @@
 def test_health(client):
     body = client.get("/api/health").json()
     assert body["ok"] is True
-    assert body["schema_version"] == 2
+    assert body["schema_version"] == 3
 
 
 def test_create_geocodes_from_cache(client):
@@ -31,8 +31,8 @@ def test_patch_status_and_undo(client):
     rec = client.post("/api/applications", json={"company": "Acme", "title": "Analyst"}).json()
     app_id = rec["id"]
 
-    patched = client.patch(f"/api/applications/{app_id}", json={"status": "Phone Screen"}).json()
-    assert patched["status"] == "Phone Screen"
+    patched = client.patch(f"/api/applications/{app_id}", json={"status": "Interview"}).json()
+    assert patched["status"] == "Interview"
 
     undone = client.post("/api/undo").json()
     assert undone["id"] == app_id
@@ -69,12 +69,12 @@ def test_locked_workbook_returns_409(client, store):
 def test_prep_crud(client):
     rec = client.post("/api/prep", json={
         "category": "Behavioral", "question": "Tell me about a conflict",
-        "situation": "S", "task": "T", "action": "A", "result": "R"}).json()
+        "answer": "Stayed calm, aligned on facts."}).json()
     assert rec["id"] == 1
 
-    client.patch(f"/api/prep/{rec['id']}", json={"tips": "Breathe"})
+    client.patch(f"/api/prep/{rec['id']}", json={"answer": "Updated answer."})
     items = client.get("/api/prep").json()["prep"]
-    assert items[0]["tips"] == "Breathe"
+    assert items[0]["answer"] == "Updated answer."
 
     client.delete(f"/api/prep/{rec['id']}")
     assert client.get("/api/prep").json()["prep"] == []
@@ -82,11 +82,11 @@ def test_prep_crud(client):
 
 def test_history_transitions(client):
     rec = client.post("/api/applications", json={"company": "Acme", "title": "Analyst"}).json()
-    client.patch(f"/api/applications/{rec['id']}", json={"status": "Phone Screen"})
-    client.patch(f"/api/applications/{rec['id']}", json={"status": "Technical"})
+    client.patch(f"/api/applications/{rec['id']}", json={"status": "Interview"})
+    client.patch(f"/api/applications/{rec['id']}", json={"status": "Offer"})
     body = client.get("/api/history").json()
     assert len(body["transitions"]) == 2
-    assert body["transitions"][1]["to"] == "Technical"
+    assert body["transitions"][1]["to"] == "Offer"
 
 
 def test_settings_roundtrip(client):

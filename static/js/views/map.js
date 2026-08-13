@@ -2,14 +2,14 @@
 // filter sidebar, dossier panel, unmapped tray, geocode backfill.
 
 import { api } from '../api.js';
-import { state, STATUSES, STATUS_COLORS, getApp, esc, fmtDate, fmtMoney } from '../state.js';
+import { state, STATUSES, STATUS_COLORS, NEXT_STATUS, getApp, patchApplication, undo, esc, fmtDate } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
+import { statusFx } from '../components/fx.js';
 
 const STATUS_HEX = {
-  'Wishlist': '#8d9ab9', 'Applied': '#d9a441', 'Phone Screen': '#5aa7e8',
-  'Technical': '#9d8cff', 'Onsite': '#e8865a', 'Offer': '#46c98d',
-  'Rejected': '#e05c6e', 'Withdrawn': '#5c6a89',
+  'Wishlist': '#8d9ab9', 'Applied': '#d9a441', 'Interview': '#5aa7e8',
+  'Offer': '#46c98d', 'Rejected': '#e05c6e', 'Withdrawn': '#5c6a89',
 };
 
 const STYLE = {
@@ -19,7 +19,6 @@ const STYLE = {
 
 let map = null;
 let mapTheme = null;
-let selectedPin = null;
 
 function mapped() { return state.apps.filter((a) => a.latitude !== '' && a.longitude !== '' && a.latitude != null); }
 
@@ -99,7 +98,7 @@ function buildMapOnce(el) {
     attributionControl: { compact: true },
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-  window.__wp_map = map; // console debugging handle
+  
 
   map.on('load', () => {
     map.addSource('apps', { type: 'geojson', data: toGeoJSON(), cluster: true, clusterRadius: 42 });
@@ -154,7 +153,7 @@ export function refreshMapData(el) {
 
 function paintStats(el) {
   const total = state.apps.length;
-  const activeN = state.apps.filter((a) => ['Applied', 'Phone Screen', 'Technical', 'Onsite'].includes(a.status)).length;
+  const activeN = state.apps.filter((a) => ['Applied', 'Interview'].includes(a.status)).length;
   const offers = state.apps.filter((a) => a.status === 'Offer').length;
   const rejected = state.apps.filter((a) => a.status === 'Rejected').length;
   el.querySelector('#map-stats').innerHTML =
@@ -229,15 +228,13 @@ async function runBackfill() {
   }, 2500);
 }
 
-document.addEventListener('waypoint:backfill', runBackfill);
+document.addEventListener('apptracker:backfill', runBackfill);
 
 function showDossier(el, id) {
   const app = getApp(id);
   const box = el.querySelector('#map-dossier');
   if (!app) { box.hidden = true; return; }
   box.hidden = false;
-  const money = [fmtMoney(app.salary_min, app.currency), fmtMoney(app.salary_max, app.currency)]
-    .filter(Boolean).join(' – ');
   box.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px">
       <span class="dot" style="background:${STATUS_COLORS[app.status]}"></span>
@@ -250,17 +247,32 @@ function showDossier(el, id) {
       <div class="row-item" style="cursor:default"><span class="faint">Applied</span><span class="spacer"></span><span class="num">${esc(fmtDate(app.date_applied))}</span></div>
       ${app.location ? `<div class="row-item" style="cursor:default"><span class="faint">Location</span><span class="spacer"></span>${esc(app.location)}</div>` : ''}
       ${app.work_type ? `<div class="row-item" style="cursor:default"><span class="faint">Work type</span><span class="spacer"></span>${esc(app.work_type)}</div>` : ''}
-      ${money ? `<div class="row-item" style="cursor:default"><span class="faint">Salary</span><span class="spacer"></span><span class="num">${money}</span></div>` : ''}
       ${app.sponsorship ? `<div class="row-item" style="cursor:default"><span class="faint">Sponsorship</span><span class="spacer"></span>${esc(app.sponsorship)}</div>` : ''}
       ${app.source ? `<div class="row-item" style="cursor:default"><span class="faint">Source</span><span class="spacer"></span>${esc(app.source)}</div>` : ''}
     </div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      ${app.url ? `<a class="ghost-btn" href="${esc(app.url)}" target="_blank" rel="noopener">Posting ↗</a>` : ''}
+      ${NEXT_STATUS[app.status] ? `<button class="ghost-btn" id="dossier-adv">▸ ${esc(NEXT_STATUS[app.status])}</button>` : ''}
+      ${!['Rejected', 'Withdrawn'].includes(app.status) ? `<button class="danger-btn" id="dossier-rej" style="padding:6px 10px">✕</button>` : ''}
       <span class="spacer"></span>
+      ${app.url ? `<a class="ghost-btn" href="${esc(app.url)}" target="_blank" rel="noopener">Posting ↗</a>` : ''}
       <button class="accent-btn" id="dossier-open">Details</button>
     </div>`;
   box.querySelector('#dossier-x').onclick = () => { box.hidden = true; };
   box.querySelector('#dossier-open').onclick = () => openDetail(id);
+  const move = async (to) => {
+    statusFx(box, to);
+    try {
+      await patchApplication(id, { status: to }, { optimistic: true });
+      toast(`${app.company}: ${app.status} → ${to}`, { action: 'Undo', onAction: async () => { await undo(); } });
+      showDossier(el, id);
+    } catch (err) {
+      if (err.status !== 409) toast('Change failed. ' + err.message, { error: true });
+    }
+  };
+  const adv = box.querySelector('#dossier-adv');
+  if (adv) adv.onclick = () => move(NEXT_STATUS[app.status]);
+  const rej = box.querySelector('#dossier-rej');
+  if (rej) rej.onclick = () => move('Rejected');
 }
 
 function frameAll() {

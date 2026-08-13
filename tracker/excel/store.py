@@ -67,6 +67,9 @@ def _clean(record: dict, keys: list) -> dict:
             continue
         if key == "date_applied":
             out[key] = coerce_date(value) or ""
+        elif key == "status":
+            text = str(value).strip()
+            out[key] = schema.STATUS_MIGRATE.get(text, text)
         elif key in schema.NUMERIC_KEYS:
             try:
                 out[key] = float(value)
@@ -77,6 +80,30 @@ def _clean(record: dict, keys: list) -> dict:
         else:
             out[key] = str(value) if not isinstance(value, str) else value
     return out
+
+
+_STAR_HEADERS = {"Situation": "situation", "Task": "task", "Action": "action",
+                 "Result": "result", "Tips": "tips"}
+
+
+def _legacy_prep_columns(ws) -> dict:
+    """Map column index -> STAR key for pre-v3 prep sheets (else empty)."""
+    mapping = {}
+    for idx, cell in enumerate(ws[1], start=1):
+        header = str(cell.value or "").strip()
+        if header in _STAR_HEADERS:
+            mapping[idx] = _STAR_HEADERS[header]
+    return mapping
+
+
+def _merge_star(star: dict) -> str:
+    parts = []
+    for key, label in (("situation", "Situation"), ("task", "Task"),
+                       ("action", "Action"), ("result", "Result"), ("tips", "Tips")):
+        value = str(star.get(key) or "").strip()
+        if value:
+            parts.append(f"{label}: {value}")
+    return "\n".join(parts)
 
 
 class ExcelStore:
@@ -131,8 +158,12 @@ class ExcelStore:
             if schema.SHEET_PREP in wb.sheetnames:
                 ws = wb[schema.SHEET_PREP]
                 mapping = schema.header_map(ws, schema.PREP_COLUMNS)
+                star_map = _legacy_prep_columns(ws)  # pre-v3 STAR-format sheets
                 for row in ws.iter_rows(min_row=2):
                     rec = {mapping[c.column]: c.value for c in row if c.column in mapping}
+                    if star_map and not rec.get("answer"):
+                        star = {star_map[c.column]: c.value for c in row if c.column in star_map}
+                        rec["answer"] = _merge_star(star)
                     if rec.get("question"):
                         prep.append(_clean(rec, schema.PREP_KEYS))
             if schema.SHEET_META in wb.sheetnames:
@@ -155,9 +186,17 @@ class ExcelStore:
 
             meta["next_app_id"] = next_app
             meta["next_prep_id"] = next_prep
-            meta.setdefault("schema_version", schema.SCHEMA_VERSION)
+            needs_upgrade = int(meta.get("schema_version") or 0) < schema.SCHEMA_VERSION
+            meta["schema_version"] = schema.SCHEMA_VERSION
             self._apps, self._prep, self._meta = apps, prep, meta
             self._sig = self._signature()
+            if needs_upgrade:
+                # Persist the v3 layout (collapsed statuses, merged prep,
+                # dropped salary columns). Best-effort: skip if Excel has it open.
+                try:
+                    self._save()
+                except WorkbookLockedError:
+                    pass
 
     def _maybe_reload(self) -> None:
         with self._lock:

@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from waypoint.excel.store import ExcelStore  # noqa: E402
+from tracker.excel.store import ExcelStore  # noqa: E402
 
 CITIES = {
     "Amsterdam, Netherlands": (52.3728, 4.8936),
@@ -58,44 +58,38 @@ COMPANIES = [
 
 SOURCES = ["LinkedIn", "Company site", "Referral", "Indeed", "Otta"]
 SPONSOR = ["Mentioned", "Not offered", ""]
-STATUS_WEIGHTED = (["Applied"] * 8 + ["Phone Screen"] * 3 + ["Technical"] * 2 +
-                   ["Onsite"] * 1 + ["Offer"] * 1 + ["Rejected"] * 12 +
-                   ["Withdrawn"] * 1 + ["Wishlist"] * 2)
+STATUS_WEIGHTED = (["Applied"] * 9 + ["Interview"] * 5 + ["Offer"] * 1 +
+                   ["Rejected"] * 12 + ["Withdrawn"] * 1 + ["Wishlist"] * 2)
 
 PREP = [
-    ("Behavioral", "Teamwork", "Tell me about a time you resolved a conflict in a team.",
-     "Two analysts disagreed on metric definitions mid-sprint.",
-     "Align the team before the stakeholder review.",
-     "Facilitated a working session, wrote the definition doc, got both to co-own it.",
-     "Review shipped on time; the doc became the team standard.",
-     "Name the disagreement neutrally; focus on the process."),
-    ("Behavioral", "Ownership", "Describe a project you drove end to end.",
-     "Churn dashboard requested by leadership with no clear owner.",
-     "Deliver a trustworthy weekly view of churn drivers.",
-     "Scoped with stakeholders, built the pipeline, automated QA checks.",
-     "Adopted in the weekly business review; caught a billing bug.",
-     "Quantify the result."),
-    ("Technical", "SQL", "How would you find duplicate users in a table?",
-     "", "", "GROUP BY email HAVING COUNT(*) > 1, or ROW_NUMBER() OVER a window to keep the first.",
-     "", "Mention trade-offs between the two."),
-    ("Technical", "Statistics", "Explain p-values to a non-technical stakeholder.",
-     "", "", "Probability of seeing data this extreme if there were truly no effect.",
-     "", "Avoid 'probability the hypothesis is true'."),
-    ("Case", "Metrics", "Signups dropped 15% week over week — walk me through your investigation.",
-     "", "", "Segment (platform, geo, channel), check tracking changes, seasonality, funnel step deltas.",
-     "", "Structure first, hypotheses second."),
-    ("Motivation", "", "Why this company?",
-     "", "", "Tie one product decision they made to your own experience; be specific.",
-     "", "Research one recent launch."),
-    ("Motivation", "", "Where do you see yourself in five years?",
-     "", "", "Growing from IC excellence toward owning a problem space.",
-     "", "Keep it honest, not rehearsed."),
-    ("Behavioral", "Failure", "Tell me about a time you missed a deadline.",
-     "Underestimated a migration during a dashboard rebuild.",
-     "Ship without breaking downstream reports.",
-     "Flagged early, cut scope with the stakeholder, delivered the core a week late.",
-     "Trust preserved; process now includes a migration checklist.",
-     "Own it — no blame-shifting."),
+    ("Behavioral", "Tell me about a time you resolved a conflict in a team.",
+     "Two analysts disagreed on metric definitions mid-sprint. I facilitated a working "
+     "session, wrote the definition doc, and got both to co-own it. The review shipped "
+     "on time and the doc became the team standard. Tips: name the disagreement "
+     "neutrally; focus on the process."),
+    ("Behavioral", "Describe a project you drove end to end.",
+     "A churn dashboard leadership wanted but nobody owned. Scoped it with stakeholders, "
+     "built the pipeline, automated QA checks. Adopted in the weekly business review and "
+     "it caught a billing bug. Tips: quantify the result."),
+    ("Behavioral", "Tell me about a time you missed a deadline.",
+     "Underestimated a migration during a dashboard rebuild. Flagged it early, cut scope "
+     "with the stakeholder, delivered the core a week late. Trust preserved; the process "
+     "now includes a migration checklist. Tips: own it — no blame-shifting."),
+    ("Technical", "How would you find duplicate users in a table?",
+     "GROUP BY email HAVING COUNT(*) > 1, or ROW_NUMBER() over a window to keep the "
+     "first occurrence. Tips: mention the trade-offs between the two."),
+    ("Technical", "Explain p-values to a non-technical stakeholder.",
+     "The probability of seeing data this extreme if there were truly no effect. "
+     "Tips: avoid saying 'probability the hypothesis is true'."),
+    ("Case", "Signups dropped 15% week over week — walk me through your investigation.",
+     "Segment by platform, geo, and channel; check tracking changes, seasonality, and "
+     "funnel step deltas before hypothesizing. Tips: structure first, hypotheses second."),
+    ("Motivation", "Why this company?",
+     "Tie one product decision they made to your own experience; be specific. "
+     "Tips: research one recent launch."),
+    ("Motivation", "Where do you see yourself in five years?",
+     "Growing from IC excellence toward owning a problem space. Tips: keep it honest, "
+     "not rehearsed."),
 ]
 
 
@@ -112,8 +106,6 @@ def build(out: Path, *, seed: int = 7) -> ExcelStore:
         remote = rng.random() < 0.12
         city = rng.choice(list(CITIES))
         lat, lng = CITIES[city]
-        has_salary = rng.random() < 0.4
-        lo = rng.randrange(45, 75) * 1000 if has_salary else None
         rec = {
             "company": company if i < len(COMPANIES) else company + " (NL)",
             "title": title,
@@ -121,9 +113,6 @@ def build(out: Path, *, seed: int = 7) -> ExcelStore:
             "date_applied": "" if status == "Wishlist" else applied.isoformat(),
             "location": "Remote (EU)" if remote else city,
             "work_type": "Remote" if remote else rng.choice(["Hybrid", "Hybrid", "Onsite", ""]),
-            "salary_min": lo,
-            "salary_max": (lo + rng.randrange(8, 20) * 1000) if lo else None,
-            "currency": "EUR" if lo else "",
             "source": rng.choice(SOURCES),
             "sponsorship": rng.choice(SPONSOR),
             "url": f"https://boards.greenhouse.io/{company.split()[0].lower()}/jobs/{4000000 + i}",
@@ -133,9 +122,7 @@ def build(out: Path, *, seed: int = 7) -> ExcelStore:
             "geo_status": "remote" if remote else "ok",
         }
         apps.append(rec)
-    prep = [{"category": c, "subcategory": s, "question": q, "situation": sit,
-             "task": t, "action": a, "result": r, "tips": tip}
-            for c, s, q, sit, t, a, r, tip in PREP]
+    prep = [{"category": c, "question": q, "answer": a} for c, q, a in PREP]
     store.bulk_add(apps, prep)
     return store
 

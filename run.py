@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Launch Waypoint: pick a free port, start the server, open the browser.
+"""Launch Application Tracker: pick a free port, start the server, open the browser.
 
     python run.py [--port 8765] [--data-dir PATH] [--xlsx PATH] [--no-browser]
 """
@@ -36,7 +36,7 @@ def open_when_ready(url: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Waypoint job tracker locally.")
+    parser = argparse.ArgumentParser(description="Run the Application Tracker job tracker locally.")
     parser.add_argument("--port", type=int, default=None)
     parser.add_argument("--data-dir", help="directory for tracker.xlsx, caches, backups")
     parser.add_argument("--xlsx", help="explicit path to the tracker workbook")
@@ -44,20 +44,20 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.data_dir:
-        os.environ["WAYPOINT_DATA_DIR"] = args.data_dir
+        os.environ["TRACKER_DATA_DIR"] = args.data_dir
     if args.xlsx:
-        os.environ["WAYPOINT_XLSX"] = args.xlsx
+        os.environ["TRACKER_XLSX"] = args.xlsx
 
     import uvicorn
 
-    from waypoint.config import DEFAULT_PORT
+    from tracker.config import DEFAULT_PORT
 
     port = args.port or find_free_port(DEFAULT_PORT)
     url = f"http://127.0.0.1:{port}"
-    print(f"Waypoint → {url}")
+    print(f"Application Tracker → {url}")
     if not args.no_browser:
         threading.Thread(target=open_when_ready, args=(url,), daemon=True).start()
-    uvicorn.run("waypoint.main:app", host="127.0.0.1", port=port, log_level="warning")
+    uvicorn.run("tracker.main:app", host="127.0.0.1", port=port, log_level="warning")
 
 
 if __name__ == "__main__":

@@ -2,17 +2,17 @@ import os
 import tempfile
 
 # Keep any module-level app creation away from the real data dir.
-os.environ.setdefault("WAYPOINT_DATA_DIR", tempfile.mkdtemp(prefix="waypoint-test-"))
+os.environ.setdefault("TRACKER_DATA_DIR", tempfile.mkdtemp(prefix="tracker-test-"))
 
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
-from waypoint.excel.store import ExcelStore
-from waypoint.main import create_app
-from waypoint.services.geocoder import Geocoder
-from waypoint.services.history import History
+from tracker.excel.store import ExcelStore
+from tracker.main import create_app
+from tracker.services.geocoder import Geocoder
+from tracker.services.history import History
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

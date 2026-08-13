@@ -21,7 +21,7 @@ function commands() {
     { kind: 'do', label: 'New application', run: () => openAddFlow(), hint: 'N' },
     { kind: 'do', label: 'Undo last change', run: async () => { const r = await undo(); toast(`Undid: ${r.undone}`); }, hint: '⌘Z' },
     { kind: 'do', label: 'Toggle theme', run: () => document.getElementById('theme-btn').click() },
-    { kind: 'do', label: 'Geocode unmapped locations', run: () => { location.hash = '#/map'; document.dispatchEvent(new CustomEvent('waypoint:backfill')); } },
+    { kind: 'do', label: 'Geocode unmapped locations', run: () => { location.hash = '#/map'; document.dispatchEvent(new CustomEvent('apptracker:backfill')); } },
   ];
   const apps = state.apps.map((a) => ({
     kind: 'app',

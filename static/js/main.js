@@ -4,6 +4,7 @@ import { loadAll, subscribe, state, undo } from './state.js';
 import { openAddFlow, isOpen as isModalOpen } from './components/addflow.js';
 import { openPalette, isPaletteOpen } from './components/palette.js';
 import { isDetailOpen, closeDetail } from './components/detail.js';
+import { isSoundOn, toggleSound } from './components/fx.js';
 import { toast } from './components/toast.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderPipeline } from './views/pipeline.js';
@@ -38,7 +39,7 @@ function renderCurrent() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('waypoint-theme', theme);
+  localStorage.setItem('apptracker-theme', theme);
   onThemeChange(document.getElementById('view-map'));
   if (state.view === 'map') renderCurrent();
 }
@@ -46,6 +47,14 @@ function applyTheme(theme) {
 document.getElementById('theme-btn').onclick = () => {
   applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 };
+
+const soundBtn = document.getElementById('sound-btn');
+function paintSoundBtn() {
+  soundBtn.style.opacity = isSoundOn() ? '' : '.4';
+  soundBtn.title = isSoundOn() ? 'Sound on — click to mute' : 'Sound off';
+}
+soundBtn.onclick = () => { toggleSound(); paintSoundBtn(); };
+paintSoundBtn();
 
 // ---- global wiring ----
 
@@ -93,7 +102,7 @@ document.addEventListener('keydown', (e) => {
 
 applyThemeFromStorage();
 function applyThemeFromStorage() {
-  const saved = localStorage.getItem('waypoint-theme');
+  const saved = localStorage.getItem('apptracker-theme');
   if (saved) document.documentElement.dataset.theme = saved;
 }
 
