@@ -73,12 +73,16 @@ function spinLoop(t) {
   const dt = Math.min((t - spinLastT) / 1000, 0.1);
   spinLastT = t;
   if (!map) return;
-  if (dossierId != null || spinPointerDown || map.isMoving()) { spinLastInteract = t; return; }
+  if (spinPointerDown || map.isMoving()) { spinLastInteract = t; return; }
   if (t - spinLastInteract < SPIN_IDLE_MS) return;
-  if (map.getZoom() > 4) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Spin at every altitude, dossier open or not. Screen pixels per degree
+  // double with each zoom level, so scale the angular rate down accordingly —
+  // the drift then covers the same on-screen distance whether we're looking
+  // at the full globe or zoomed onto one company's city.
+  const spd = SPIN_DEG_PER_SEC * Math.pow(2, ZOOM.min - map.getZoom());
   const c = map.getCenter();
-  map.setCenter([c.lng - SPIN_DEG_PER_SEC * dt, c.lat]);
+  map.setCenter([c.lng - spd * dt, c.lat]);
 }
 
 function noteSpinInteract() { spinLastInteract = performance.now(); }
