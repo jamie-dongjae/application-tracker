@@ -14,12 +14,15 @@ const STATUS_HEX = {
 
 // Hyperreal space view: satellite imagery on a globe with atmosphere.
 // Esri World Imagery + CARTO label overlay — free with attribution.
+// One zoom model everywhere: SPACE (full globe) <-> FOCUS (city-region).
+const ZOOM = { min: 0.9, max: 11, focus: 6, clusterCap: 8.5, frameCap: 5.5 };
+
 const SPACE_STYLE = {
   version: 8,
   projection: { type: 'globe' },
   glyphs: 'https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
   sky: {
-    'sky-color': '#02060f',
+    'sky-color': 'rgba(2, 6, 15, 0)',
     'horizon-color': '#1b4468',
     'fog-color': '#0a1c2e',
     'sky-horizon-blend': 0.6,
@@ -51,6 +54,21 @@ const SPACE_STYLE = {
 };
 
 let map = null;
+let spinPaused = false;
+let spinResumeTimer = null;
+
+function spin() {
+  if (!map || spinPaused || dossierId != null) return;
+  if (map.getZoom() > 3.4) return; // rotate only out in space
+  const c = map.getCenter();
+  map.easeTo({ center: [c.lng + 10, c.lat], duration: 7000, easing: (t) => t, essential: false });
+}
+
+function pauseSpin() {
+  spinPaused = true;
+  clearTimeout(spinResumeTimer);
+  spinResumeTimer = setTimeout(() => { spinPaused = false; spin(); }, 7000);
+}
 
 function mapped() { return state.apps.filter((a) => a.latitude !== '' && a.longitude !== '' && a.latitude != null); }
 
@@ -125,7 +143,9 @@ function buildMapOnce(el) {
     style: SPACE_STYLE,
     // Start out in space; the load handler flies down to the pins.
     center: [40, 24],
-    zoom: cinematic ? 0.8 : 2.4,
+    zoom: cinematic ? 0.9 : 2.4,
+    minZoom: ZOOM.min,
+    maxZoom: ZOOM.max,
     attributionControl: { compact: true },
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
@@ -165,14 +185,21 @@ function buildMapOnce(el) {
     map.on('click', 'clusters', async (e) => {
       const feature = e.features[0];
       const zoom = await map.getSource('apps').getClusterExpansionZoom(feature.properties.cluster_id);
-      map.easeTo({ center: feature.geometry.coordinates, zoom });
+      map.easeTo({ center: feature.geometry.coordinates, zoom: Math.min(zoom, ZOOM.clusterCap), duration: 850 });
     });
     map.on('mouseenter', 'pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'pins', () => { map.getCanvas().style.cursor = ''; });
+    // Idle rotation: chain a new segment whenever movement settles;
+    // any user gesture pauses it for a while.
+    map.on('moveend', () => spin());
+    for (const ev of ['mousedown', 'touchstart', 'wheel', 'dragstart']) {
+      map.getCanvas().addEventListener(ev, pauseSpin, { passive: true });
+    }
     map.resize();
     // Cinematic approach: hold the full globe for a beat, then descend to the pins.
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) frameAll(0);
     else setTimeout(() => frameAll(3200), 600);
+    setTimeout(() => spin(), 4600);
   });
 }
 
@@ -228,7 +255,7 @@ function paintList(el) {
     row.onclick = () => {
       const app = getApp(Number(row.dataset.id));
       if (app && app.latitude !== '' && map) {
-        map.flyTo({ center: [app.longitude, app.latitude], zoom: Math.max(map.getZoom(), 8) });
+        map.flyTo({ center: [app.longitude, app.latitude], zoom: ZOOM.focus, speed: 0.75, curve: 1.5 });
       }
       showDossier(el, Number(row.dataset.id));
     };
@@ -267,6 +294,20 @@ async function runBackfill() {
 }
 
 document.addEventListener('apptracker:backfill', runBackfill);
+
+const PING_HEX = { 'Offer': '#3ecf95', 'Rejected': '#f0647d', 'Withdrawn': '#f0647d' };
+
+function mapPing(lnglat, color) {
+  if (!map) return;
+  const pt = map.project(lnglat);
+  const el = document.createElement('div');
+  el.className = 'map-ping';
+  el.style.left = pt.x + 'px';
+  el.style.top = pt.y + 'px';
+  el.style.setProperty('--ping', color);
+  map.getContainer().appendChild(el);
+  setTimeout(() => el.remove(), 1700);
+}
 
 function showDossier(el, id) {
   const app = getApp(id);
@@ -314,6 +355,15 @@ function showDossier(el, id) {
       await patchApplication(id, { status: to }, { optimistic: true });
       toast(`${app.company}: ${from} → ${to}`, { action: 'Undo', onAction: async () => { await undo(); } });
       showDossier(el, id);
+      // Cinematic acknowledgement on the map: glide to the pin, then ring it.
+      if (map && app.latitude !== '' && app.latitude != null) {
+        const target = [app.longitude, app.latitude];
+        const color = PING_HEX[to] || '#4dd6ff';
+        map.easeTo({ center: target, zoom: Math.max(map.getZoom(), ZOOM.focus - 0.5), duration: 900 });
+        // Ring the pin once the glide settles (moveend is unreliable when
+        // the camera is already on target).
+        setTimeout(() => mapPing(target, color), 950);
+      }
     } catch (err) {
       if (err.status !== 409) toast('Change failed. ' + err.message, { error: true });
     }
@@ -334,7 +384,7 @@ function frameAll(duration = 900) {
   const lons = features.map((f) => f.geometry.coordinates[0]);
   const lats = features.map((f) => f.geometry.coordinates[1]);
   map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-    { padding: 90, maxZoom: 10, duration, essential: false });
+    { padding: 90, maxZoom: ZOOM.frameCap, duration, essential: false });
 }
 
 export function onThemeChange() {
