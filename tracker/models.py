@@ -107,6 +107,53 @@ class EmployerIn(BaseModel):
     status: str = ""
 
 
+class SyncPatch(_V4EnumMixin, BaseModel):
+    track: Optional[str] = None
+    stage_reached: Optional[str] = None
+    current_state: Optional[str] = None
+    outcome: Optional[str] = None
+    closed_by: Optional[str] = None
+    gates: Optional[str] = None
+    contacts: Optional[str] = None
+    next_action: Optional[str] = None
+    due: Optional[str] = None
+
+
+class SyncEventIn(BaseModel):
+    date: Optional[str] = None
+    event: str = Field(min_length=1)
+    note: str = ""
+    provenance: str = ""  # e.g. "gmail:<message-id>"
+
+
+class SyncRecord(BaseModel):
+    company: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    match: dict = Field(default_factory=dict)      # {"id": N} | {"title": ...} | {"title_contains": [...]}
+    confidence: str = "review"                     # "high" | "review" — gated client-side
+    reason: str = ""
+    fields: dict = Field(default_factory=dict)     # base columns for adds / fill-if-empty
+    patch: SyncPatch = Field(default_factory=SyncPatch)
+    note: str = ""
+    events: list[SyncEventIn] = Field(default_factory=list)
+    provenance: list[str] = Field(default_factory=list)
+
+
+class SyncPacket(BaseModel):
+    packet_version: int = 1
+    source: str = "manual"
+    generated_at: str = Field(min_length=1)        # ISO timestamp; becomes last_sync on apply
+    since: str = ""
+    records: list[SyncRecord] = Field(default_factory=list)
+    employers: list[EmployerIn] = Field(default_factory=list)
+    aliases: dict = Field(default_factory=dict)    # normalized name -> normalized tracker name
+
+
+class SyncImportRequest(BaseModel):
+    packet: SyncPacket
+    dry_run: bool = True
+
+
 class PrefillRequest(BaseModel):
     url: str = Field(min_length=4)
 

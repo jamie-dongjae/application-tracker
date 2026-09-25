@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .excel.store import ExcelStore, WorkbookLockedError
-from .routers import applications, geocode, meta, prefill, prep
+from .routers import applications, geocode, meta, prefill, prep, sync
 from .services.geocoder import BackfillJob, Geocoder
 from .services.history import History
 
@@ -26,7 +26,7 @@ def create_app(store: ExcelStore | None = None, history: History | None = None,
     app.state.backfill = BackfillJob(app.state.geocoder, app.state.store)
 
     for router in (meta.router, applications.router, prep.router,
-                   prefill.router, geocode.router):
+                   prefill.router, geocode.router, sync.router):
         app.include_router(router, prefix="/api")
 
     @app.exception_handler(WorkbookLockedError)

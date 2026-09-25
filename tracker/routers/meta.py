@@ -28,7 +28,8 @@ def put_employers(request: Request, body: list[EmployerIn]):
 @router.get("/health")
 def health(request: Request):
     info = request.app.state.store.info()
-    return {"ok": True, **info}
+    return {"ok": True, **info,
+            "last_sync": config.load_settings().get("last_sync") or None}
 
 
 @router.get("/settings")
