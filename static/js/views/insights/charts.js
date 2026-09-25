@@ -185,7 +185,9 @@ export function terrainOption(m, t) {
     },
     grid3D: {
       boxWidth: 150, boxDepth: 62, boxHeight: 46,
-      environment: 'transparent',
+      // echarts-gl paints "transparent" as opaque black; use the panel token
+      // so the scene blends into the glass card in both themes.
+      environment: t.panel,
       light: { main: { intensity: 1.25, shadow: false, beta: 35 }, ambient: { intensity: 0.32 } },
       viewControl: {
         autoRotate: motionAllowed(), autoRotateSpeed: 5, autoRotateAfterStill: 4,
