@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for port in range(8765, 8775):
     url = f"http://127.0.0.1:{port}"
     try:
-        with urllib.request.urlopen(url + "/api/health", timeout=0.4) as resp:
+        with urllib.request.urlopen(url + "/api/health", timeout=1.5) as resp:
             if b'"ok":' in resp.read(200):
                 if sys.platform == "darwin":
                     subprocess.run(["open", url], check=False)
