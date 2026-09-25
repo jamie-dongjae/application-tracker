@@ -8,6 +8,23 @@ export const CLOSED_STATUSES = ['Accepted', 'Declined', 'Rejected', 'Withdrawn']
 export const ACTIVE_STATUSES = ['Applied', 'Interview', 'Offer'];
 // Accepted/Declined both mean the application reached an offer.
 export const REACHED_OFFER = ['Offer', 'Accepted', 'Declined'];
+
+// History-aware "reached offer": current offer-stage statuses plus apps whose
+// transition history ever touched the stage — an offer that later fell
+// through to Rejected/Withdrawn still reached it. Keeps the KPI counts
+// consistent with the history-aware funnel/sankey in Insights.
+export function reachedOfferCount() {
+  const ids = new Set();
+  const alive = new Set();
+  for (const a of state.apps) {
+    alive.add(a.id);
+    if (REACHED_OFFER.includes(a.status)) ids.add(a.id);
+  }
+  for (const t of state.transitions) {
+    if (alive.has(t.id) && (REACHED_OFFER.includes(t.from) || REACHED_OFFER.includes(t.to))) ids.add(t.id);
+  }
+  return ids.size;
+}
 export const WORK_TYPES = ['', 'Onsite', 'Hybrid', 'Remote'];
 
 export const STATUS_COLORS = {

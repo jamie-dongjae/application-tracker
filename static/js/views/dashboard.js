@@ -1,6 +1,6 @@
 // Dashboard: weekly goal, KPIs, pipeline snapshot, next actions, activity.
 
-import { state, ACTIVE_STATUSES, BOARD_STATUSES, REACHED_OFFER, STATUS_COLORS, daysSince, esc } from '../state.js';
+import { state, ACTIVE_STATUSES, BOARD_STATUSES, reachedOfferCount, STATUS_COLORS, daysSince, esc } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { countUp, motionOK } from '../components/motion.js';
 
@@ -22,7 +22,7 @@ export function renderDashboard(el) {
   const submitted = apps.filter((a) => a.status !== 'Wishlist').length;
   const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status)).length;
   const responseRate = submitted ? Math.round((responded / submitted) * 100) : 0;
-  const offers = apps.filter((a) => REACHED_OFFER.includes(a.status)).length;
+  const offers = reachedOfferCount();
   const accepted = apps.filter((a) => a.status === 'Accepted').length;
 
   const pct = Math.min(1, thisWeek / goal);
@@ -132,10 +132,15 @@ export function renderDashboard(el) {
   const fg = el.querySelector('.ring-fg');
   if (fg && motionOK()) {
     // GSAP owns this sweep; disable the CSS transition so they don't fight.
+    // Deferred a frame so enterView's killTweensOf (which runs right after
+    // this renderer on navigation) can't kill the tween at its empty frame.
     fg.style.transition = 'none';
-    gsap.fromTo(fg,
-      { attr: { 'stroke-dashoffset': C } },
-      { attr: { 'stroke-dashoffset': C * (1 - pct) }, duration: 1.1, ease: 'power3.out' });
+    requestAnimationFrame(() => {
+      if (!fg.isConnected) return;
+      gsap.fromTo(fg,
+        { attr: { 'stroke-dashoffset': C } },
+        { attr: { 'stroke-dashoffset': C * (1 - pct) }, duration: 1.1, ease: 'power3.out' });
+    });
   }
 
   el.querySelectorAll('[data-open]').forEach((row) => {

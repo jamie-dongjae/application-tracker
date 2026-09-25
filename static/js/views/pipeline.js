@@ -77,7 +77,7 @@ export function renderPipeline(el) {
     </div>
 
     <details class="tray">
-      <summary><span class="dot" style="background:${STATUS_COLORS.Rejected}"></span>
+      <summary><span class="dot" style="background:var(--text-faint)"></span>
         Closed · <span class="num">${closed.length}</span>
         <span class="faint">(accepted · declined · rejected · withdrawn — revive puts one back into Applied)</span>
       </summary>
@@ -118,8 +118,18 @@ export function renderPipeline(el) {
       e.preventDefault();
       zone.classList.remove('drag-over');
       const id = Number(e.dataTransfer.getData('text/plain'));
+      const app = state.apps.find((a) => a.id === id);
+      if (!app) return;
+      let to = zone.dataset.status;
+      if (zone.classList.contains('tray-list')) {
+        // The tray holds four outcomes, so it can't hard-assign one status:
+        // closed cards dropped back onto it stay as they are, and dragging an
+        // Offer there reads as the user turning it down, not the company.
+        if (CLOSED_STATUSES.includes(app.status)) return;
+        to = app.status === 'Offer' ? 'Declined' : 'Rejected';
+      }
       const target = el.querySelector(`.card[data-id="${id}"]`);
-      changeStatus(id, zone.dataset.status, target || zone);
+      changeStatus(id, to, target || zone);
     });
   });
 }

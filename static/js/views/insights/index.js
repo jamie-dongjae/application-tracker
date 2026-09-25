@@ -28,6 +28,12 @@ function hasWebGL() {
   return webglOK;
 }
 
+// The production echarts build silently DROPS unregistered series types, so
+// a missing echarts-gl never throws — detect its UMD global explicitly.
+function hasGL() {
+  return typeof window['echarts-gl'] !== 'undefined';
+}
+
 const SKELETON = `
   <div class="page-head">
     <h1 class="page-title">Insights</h1>
@@ -101,7 +107,7 @@ function applyData() {
     rose: charts.roseOption(derive.sourceRose(), t),
     calendar: charts.calendarOption(derive.calendarData(), t),
     worktype: charts.donutOption(derive.workTypeDonut(), t),
-    terrain: (!terrainBroken && hasWebGL())
+    terrain: (!terrainBroken && hasWebGL() && hasGL())
       ? charts.terrainOption(terrain, t)
       : charts.terrainFallbackOption(terrain, t),
   };
@@ -110,10 +116,18 @@ function applyData() {
       chart.setOption(options[name], true);
     } catch (err) {
       if (name === 'terrain' && !terrainBroken) {
-        // echarts-gl unavailable or WebGL init failed: fall back to a 2D
-        // heatmap of the same matrix, permanently for this session.
+        // WebGL init failed mid-setOption: fall back to a 2D heatmap of the
+        // same matrix, permanently for this session. A throw can leave the
+        // instance's main-process flag stuck (every later call silently
+        // no-ops), so start from a fresh instance rather than reusing it.
         terrainBroken = true;
-        chart.setOption(charts.terrainFallbackOption(terrain, t), true);
+        chart.dispose();
+        const box = rootEl && rootEl.querySelector('[data-chart="terrain"]');
+        if (box) {
+          const fresh = echarts.init(box);
+          registry.set('terrain', fresh);
+          fresh.setOption(charts.terrainFallbackOption(terrain, t), true);
+        }
       } else {
         console.error(`insights: ${name} failed to render`, err);
       }
