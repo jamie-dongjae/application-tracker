@@ -5,7 +5,7 @@
 import { state, esc } from '../state.js';
 
 const STAGE_IDX = {
-  'Applied': 1, 'Interview': 2, 'Offer': 3,
+  'Applied': 1, 'Interview': 2, 'Offer': 3, 'Accepted': 3, 'Declined': 3,
   // pre-simplification stage names in old history entries
   'Phone Screen': 2, 'Technical': 2, 'Onsite': 2,
 };
@@ -30,7 +30,7 @@ export function renderInsights(el) {
 
   const submitted = apps.filter((a) => a.status !== 'Wishlist');
   const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status));
-  const offers = apps.filter((a) => a.status === 'Offer').length;
+  const offers = apps.filter((a) => ['Offer', 'Accepted', 'Declined'].includes(a.status)).length;
   const rejected = apps.filter((a) => a.status === 'Rejected').length;
 
   const stages = ['Applied', 'Interview', 'Offer'];

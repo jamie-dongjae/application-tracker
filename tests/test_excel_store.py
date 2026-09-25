@@ -37,6 +37,18 @@ def test_roundtrip_add_update_delete(store):
     assert rec2["id"] == 2
 
 
+def test_offer_outcome_statuses_roundtrip(store):
+    """Accepted and Declined survive the save/reload cycle like any status."""
+    store.add_application({"company": "Acme", "title": "Analyst", "status": "Offer"})
+    store.add_application({"company": "Beta", "title": "Engineer", "status": "Offer"})
+    store.update_application(1, {"status": "Accepted"})
+    store.update_application(2, {"status": "Declined"})
+
+    fresh = ExcelStore(store.path)
+    rows = fresh.list_applications()
+    assert [r["status"] for r in rows] == ["Accepted", "Declined"]
+
+
 def test_v2_workbook_migrates_on_load(tmp_path):
     """Pre-v3 workbooks (old stage names, STAR prep columns) upgrade in place."""
     from openpyxl import Workbook

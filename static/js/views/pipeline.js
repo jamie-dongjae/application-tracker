@@ -38,13 +38,19 @@ export function renderPipeline(el) {
     const isClosed = CLOSED_STATUSES.includes(a.status);
     const actions = isClosed
       ? `<button class="card-btn" data-act="revive" title="Back to Applied">↩ Revive</button>`
-      : `${next ? `<button class="card-btn adv" data-act="advance" title="Move to ${esc(next)}">▸ ${esc(next)}</button>` : ''}
-         <button class="card-btn rej" data-act="reject" title="Mark rejected">✕ Reject</button>`;
+      : a.status === 'Offer'
+        ? `<button class="card-btn acc" data-act="accept" title="Accept the offer">✓ Accept</button>
+           <button class="card-btn rej" data-act="reject" title="Offer fell through / rejected">✕ Rejected</button>
+           <button class="card-btn wd" data-act="decline" title="Turn the offer down">⤺ Decline</button>`
+        : `${next ? `<button class="card-btn adv" data-act="advance" title="Move to ${esc(next)}">▸ ${esc(next)}</button>` : ''}
+           <button class="card-btn rej" data-act="reject" title="Mark rejected">✕ Reject</button>
+           <button class="card-btn wd" data-act="withdraw" title="Withdraw your application">⤺ Withdraw</button>`;
     return `
       <div class="card" draggable="true" data-id="${a.id}" data-flip-id="app-${a.id}">
         <div class="card-company">${esc(a.company)}</div>
         <div class="card-title">${esc(a.title)}</div>
         <div class="card-meta">
+          ${isClosed ? `<span><span class="dot" style="background:${STATUS_COLORS[a.status]}"></span> ${esc(a.status)}</span>` : ''}
           ${a.location ? `<span>${esc(a.location)}</span>` : ''}
           ${a.sponsorship === 'Mentioned' ? `<span title="Sponsorship mentioned">visa✓</span>` : ''}
           <span class="spacer"></span>
@@ -73,7 +79,7 @@ export function renderPipeline(el) {
     <details class="tray">
       <summary><span class="dot" style="background:${STATUS_COLORS.Rejected}"></span>
         Closed · <span class="num">${closed.length}</span>
-        <span class="faint">(rejected & withdrawn — revive puts one back into Applied)</span>
+        <span class="faint">(accepted · declined · rejected · withdrawn — revive puts one back into Applied)</span>
       </summary>
       <div class="tray-list" data-status="Rejected">
         ${closed.map(card).join('') || `<div class="empty">Nothing closed yet.</div>`}
@@ -88,9 +94,13 @@ export function renderPipeline(el) {
       e.stopPropagation();
       const app = state.apps.find((a) => a.id === id);
       if (!app) return;
-      const to = btn.dataset.act === 'reject' ? 'Rejected'
-        : btn.dataset.act === 'revive' ? 'Applied'
-        : NEXT_STATUS[app.status];
+      const to = {
+        reject: 'Rejected',
+        revive: 'Applied',
+        accept: 'Accepted',
+        decline: 'Declined',
+        withdraw: 'Withdrawn',
+      }[btn.dataset.act] || NEXT_STATUS[app.status];
       if (to) changeStatus(id, to, cardEl);
     });
     cardEl.addEventListener('dragstart', (e) => {

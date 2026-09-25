@@ -2,10 +2,12 @@
 
 import { api } from './api.js';
 
-export const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected', 'Withdrawn'];
+export const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Accepted', 'Declined', 'Rejected', 'Withdrawn'];
 export const BOARD_STATUSES = STATUSES.slice(0, 4);
-export const CLOSED_STATUSES = ['Rejected', 'Withdrawn'];
+export const CLOSED_STATUSES = ['Accepted', 'Declined', 'Rejected', 'Withdrawn'];
 export const ACTIVE_STATUSES = ['Applied', 'Interview', 'Offer'];
+// Accepted/Declined both mean the application reached an offer.
+export const REACHED_OFFER = ['Offer', 'Accepted', 'Declined'];
 export const WORK_TYPES = ['', 'Onsite', 'Hybrid', 'Remote'];
 
 export const STATUS_COLORS = {
@@ -13,6 +15,8 @@ export const STATUS_COLORS = {
   'Applied': 'var(--s-applied)',
   'Interview': 'var(--s-screen)',
   'Offer': 'var(--s-offer)',
+  'Accepted': 'var(--s-accepted)',
+  'Declined': 'var(--s-declined)',
   'Rejected': 'var(--s-rejected)',
   'Withdrawn': 'var(--s-withdrawn)',
 };

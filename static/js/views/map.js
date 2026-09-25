@@ -2,14 +2,15 @@
 // filter sidebar, dossier panel, unmapped tray, geocode backfill.
 
 import { api } from '../api.js';
-import { state, STATUSES, STATUS_COLORS, NEXT_STATUS, getApp, patchApplication, undo, esc, fmtDate } from '../state.js';
+import { state, STATUSES, STATUS_COLORS, CLOSED_STATUSES, REACHED_OFFER, NEXT_STATUS, getApp, patchApplication, undo, esc, fmtDate } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
 
 const STATUS_HEX = {
   'Wishlist': '#94a2c4', 'Applied': '#e5aa3f', 'Interview': '#5fb2f2',
-  'Offer': '#3ecf95', 'Rejected': '#f0647d', 'Withdrawn': '#66759b',
+  'Offer': '#3ecf95', 'Accepted': '#ffd166', 'Declined': '#b48ee0',
+  'Rejected': '#f0647d', 'Withdrawn': '#66759b',
 };
 
 // Hyperreal space view: satellite imagery on a globe with atmosphere.
@@ -240,7 +241,7 @@ let dossierId = null;
 function paintStats(el) {
   const total = state.apps.length;
   const activeN = state.apps.filter((a) => ['Applied', 'Interview'].includes(a.status)).length;
-  const offers = state.apps.filter((a) => a.status === 'Offer').length;
+  const offers = state.apps.filter((a) => REACHED_OFFER.includes(a.status)).length;
   const rejected = state.apps.filter((a) => a.status === 'Rejected').length;
   el.querySelector('#map-stats').innerHTML =
     `<span><b>${total}</b> TRACKED</span><span><b>${activeN}</b> ACTIVE</span>` +
@@ -316,7 +317,7 @@ async function runBackfill() {
 
 document.addEventListener('apptracker:backfill', runBackfill);
 
-const PING_HEX = { 'Offer': '#3ecf95', 'Rejected': '#f0647d', 'Withdrawn': '#f0647d' };
+const PING_HEX = { 'Offer': '#3ecf95', 'Accepted': '#ffd166', 'Declined': '#b48ee0', 'Rejected': '#f0647d', 'Withdrawn': '#f0647d' };
 
 function mapPing(lnglat, color) {
   if (!map) return;
@@ -357,9 +358,11 @@ function showDossier(el, id) {
     </div>
     <div class="dossier-actions">
       ${NEXT_STATUS[app.status] ? `<button class="ghost-btn grow" id="dossier-adv">▸ ${esc(NEXT_STATUS[app.status])}</button>` : ''}
-      ${['Rejected', 'Withdrawn'].includes(app.status)
+      ${app.status === 'Offer' ? `<button class="ghost-btn grow" id="dossier-acc" style="color:var(--s-accepted)">✓ Accept</button>` : ''}
+      ${CLOSED_STATUSES.includes(app.status)
         ? `<button class="ghost-btn grow" id="dossier-revive">↩ Revive</button>`
-        : `<button class="danger-btn" id="dossier-rej" title="Mark rejected">✕ Reject</button>`}
+        : `<button class="danger-btn" id="dossier-rej" title="Mark rejected">✕ Reject</button>
+           <button class="ghost-btn" id="dossier-wd" title="${app.status === 'Offer' ? 'Turn the offer down' : 'Withdraw your application'}">⤺ ${app.status === 'Offer' ? 'Decline' : 'Withdraw'}</button>`}
     </div>
     <div class="dossier-actions">
       ${app.url ? `<a class="ghost-btn" href="${esc(app.url)}" target="_blank" rel="noopener">Posting ↗</a>` : ''}
@@ -392,8 +395,12 @@ function showDossier(el, id) {
   box.querySelector('#dossier-status').onchange = (e) => move(e.target.value);
   const adv = box.querySelector('#dossier-adv');
   if (adv) adv.onclick = () => move(NEXT_STATUS[app.status]);
+  const acc = box.querySelector('#dossier-acc');
+  if (acc) acc.onclick = () => move('Accepted');
   const rej = box.querySelector('#dossier-rej');
   if (rej) rej.onclick = () => move('Rejected');
+  const wd = box.querySelector('#dossier-wd');
+  if (wd) wd.onclick = () => move(app.status === 'Offer' ? 'Declined' : 'Withdrawn');
   const revive = box.querySelector('#dossier-revive');
   if (revive) revive.onclick = () => move('Applied');
 }

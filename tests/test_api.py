@@ -89,6 +89,24 @@ def test_history_transitions(client):
     assert body["transitions"][1]["to"] == "Offer"
 
 
+def test_accept_offer(client):
+    rec = client.post("/api/applications", json={"company": "Acme", "title": "Analyst"}).json()
+    client.patch(f"/api/applications/{rec['id']}", json={"status": "Offer"})
+    patched = client.patch(f"/api/applications/{rec['id']}", json={"status": "Accepted"}).json()
+    assert patched["status"] == "Accepted"
+    transitions = client.get("/api/history").json()["transitions"]
+    assert transitions[-1]["from"] == "Offer" and transitions[-1]["to"] == "Accepted"
+
+
+def test_decline_offer(client):
+    rec = client.post("/api/applications", json={"company": "Acme", "title": "Analyst"}).json()
+    client.patch(f"/api/applications/{rec['id']}", json={"status": "Offer"})
+    patched = client.patch(f"/api/applications/{rec['id']}", json={"status": "Declined"}).json()
+    assert patched["status"] == "Declined"
+    transitions = client.get("/api/history").json()["transitions"]
+    assert transitions[-1]["to"] == "Declined"
+
+
 def test_settings_roundtrip(client):
     client.put("/api/settings", json={"weekly_goal": 7})
     assert client.get("/api/settings").json()["weekly_goal"] == 7

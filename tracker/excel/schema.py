@@ -23,6 +23,8 @@ STATUSES = [
     "Applied",
     "Interview",
     "Offer",
+    "Accepted",
+    "Declined",
     "Rejected",
     "Withdrawn",
 ]
