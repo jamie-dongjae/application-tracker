@@ -1,7 +1,7 @@
 def test_health(client):
     body = client.get("/api/health").json()
     assert body["ok"] is True
-    assert body["schema_version"] == 3
+    assert body["schema_version"] == 4
 
 
 def test_create_geocodes_from_cache(client):

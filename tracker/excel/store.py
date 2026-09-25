@@ -65,8 +65,10 @@ def _clean(record: dict, keys: list) -> dict:
         if value in (None, ""):
             out[key] = ""
             continue
-        if key == "date_applied":
+        if key in ("date_applied", "due", "date"):
             out[key] = coerce_date(value) or ""
+        elif key == "gates" and isinstance(value, (list, tuple)):
+            out[key] = ", ".join(str(v).strip() for v in value if str(v).strip())
         elif key == "status":
             text = str(value).strip()
             out[key] = schema.STATUS_MIGRATE.get(text, text)
@@ -80,6 +82,26 @@ def _clean(record: dict, keys: list) -> dict:
         else:
             out[key] = str(value) if not isinstance(value, str) else value
     return out
+
+
+_V4_SYNC_KEYS = ("stage_reached", "current_state", "outcome", "track", "closed_by")
+
+
+def _sync_after_merge(before: dict, merged: dict) -> dict:
+    """Keep legacy status and v4 fields consistent after a mutation.
+
+    v4 field changes win (status is derived from them); a lone status change
+    is forward-mapped onto the v4 fields. Returns the reconciled record.
+    """
+    v4_changed = any(merged.get(k, "") != before.get(k, "") for k in _V4_SYNC_KEYS)
+    status_changed = merged.get("status", "") != before.get("status", "")
+    if v4_changed:
+        merged["status"] = schema.derive_status(merged)
+    elif status_changed:
+        fwd = schema.apply_status_forward(merged, merged.get("status", ""))
+        if fwd:
+            merged = _clean({**merged, **fwd}, schema.APP_KEYS)
+    return merged
 
 
 _STAR_HEADERS = {"Situation": "situation", "Task": "task", "Action": "action",
@@ -113,6 +135,8 @@ class ExcelStore:
         self._lock = threading.RLock()
         self._apps: list[dict] = []
         self._prep: list[dict] = []
+        self._events: list[dict] = []
+        self._employers: list[dict] = []
         self._meta: dict = {}
         self._sig: tuple | None = None
         self._last_backup = 0.0
@@ -148,6 +172,7 @@ class ExcelStore:
         with self._lock:
             wb = load_workbook(self.path, data_only=True)
             apps, prep, meta = [], [], {}
+            events, employers = [], []
             if schema.SHEET_APPS in wb.sheetnames:
                 ws = wb[schema.SHEET_APPS]
                 mapping = schema.header_map(ws, schema.APP_COLUMNS)
@@ -166,6 +191,22 @@ class ExcelStore:
                         rec["answer"] = _merge_star(star)
                     if rec.get("question"):
                         prep.append(_clean(rec, schema.PREP_KEYS))
+            if schema.SHEET_EVENTS in wb.sheetnames:
+                ws = wb[schema.SHEET_EVENTS]
+                mapping = schema.header_map(ws, schema.EVENT_COLUMNS)
+                for row in ws.iter_rows(min_row=2):
+                    rec = {mapping[c.column]: c.value for c in row if c.column in mapping}
+                    if rec.get("event"):
+                        cleaned = _clean(rec, schema.EVENT_KEYS)
+                        cleaned["app_id"] = int(rec.get("app_id") or 0)
+                        events.append(cleaned)
+            if schema.SHEET_EMPLOYERS in wb.sheetnames:
+                ws = wb[schema.SHEET_EMPLOYERS]
+                mapping = schema.header_map(ws, schema.EMPLOYER_COLUMNS)
+                for row in ws.iter_rows(min_row=2):
+                    rec = {mapping[c.column]: c.value for c in row if c.column in mapping}
+                    if rec.get("employer"):
+                        employers.append(_clean(rec, schema.EMPLOYER_KEYS))
             if schema.SHEET_META in wb.sheetnames:
                 meta = schema.read_meta(wb[schema.SHEET_META])
             wb.close()
@@ -183,16 +224,37 @@ class ExcelStore:
                     rec["id"] = next_prep
                     next_prep += 1
             next_prep = max([next_prep] + [int(r["id"]) + 1 for r in prep if r.get("id")])
+            next_event = int(meta.get("next_event_id") or 1)
+            for rec in events:
+                if not rec.get("id"):
+                    rec["id"] = next_event
+                    next_event += 1
+            next_event = max([next_event] + [int(r["id"]) + 1 for r in events if r.get("id")])
+            next_employer = int(meta.get("next_employer_id") or 1)
+            for rec in employers:
+                if not rec.get("id"):
+                    rec["id"] = next_employer
+                    next_employer += 1
+            next_employer = max([next_employer] + [int(r["id"]) + 1 for r in employers if r.get("id")])
 
             meta["next_app_id"] = next_app
             meta["next_prep_id"] = next_prep
-            needs_upgrade = int(meta.get("schema_version") or 0) < schema.SCHEMA_VERSION
+            meta["next_event_id"] = next_event
+            meta["next_employer_id"] = next_employer
+            stored_version = int(meta.get("schema_version") or 0)
+            needs_upgrade = stored_version < schema.SCHEMA_VERSION
             meta["schema_version"] = schema.SCHEMA_VERSION
+            if stored_version < 4:
+                # v3 -> v4: derive categorization defaults from the legacy status.
+                for rec in apps:
+                    patch = schema.apply_v4_defaults(rec)
+                    if patch:
+                        rec.update(_clean({**rec, **patch}, schema.APP_KEYS))
             self._apps, self._prep, self._meta = apps, prep, meta
+            self._events, self._employers = events, employers
             self._sig = self._signature()
             if needs_upgrade:
-                # Persist the v3 layout (collapsed statuses, merged prep,
-                # dropped salary columns). Best-effort: skip if Excel has it open.
+                # Persist the upgraded layout. Best-effort: skip if Excel has it open.
                 try:
                     self._save()
                 except WorkbookLockedError:
@@ -236,6 +298,8 @@ class ExcelStore:
         wb = schema.init_workbook()
         schema.write_rows(wb[schema.SHEET_APPS], schema.APP_COLUMNS, self._apps)
         schema.write_rows(wb[schema.SHEET_PREP], schema.PREP_COLUMNS, self._prep)
+        schema.write_rows(wb[schema.SHEET_EVENTS], schema.EVENT_COLUMNS, self._events)
+        schema.write_rows(wb[schema.SHEET_EMPLOYERS], schema.EMPLOYER_COLUMNS, self._employers)
         schema.set_meta(wb[schema.SHEET_META], self._meta)
         self._atomic_save(wb)
         self._sig = self._signature()
@@ -259,6 +323,7 @@ class ExcelStore:
         with self._lock:
             self._maybe_reload()
             rec = _clean(fields, schema.APP_KEYS)
+            rec = _sync_after_merge({}, rec)
             if force_id is not None:
                 rec["id"] = force_id
                 self._meta["next_app_id"] = max(int(self._meta["next_app_id"]), force_id + 1)
@@ -278,6 +343,7 @@ class ExcelStore:
                     before = dict(rec)
                     merged = {**rec, **{k: v for k, v in patch.items() if k in schema.APP_KEYS and k != "id"}}
                     merged = _clean(merged, schema.APP_KEYS)
+                    merged = _sync_after_merge(before, merged)
                     merged["id"] = app_id
                     merged["last_updated"] = datetime.now().isoformat(timespec="seconds")
                     self._apps[i] = merged
@@ -291,6 +357,7 @@ class ExcelStore:
             for i, rec in enumerate(self._apps):
                 if rec["id"] == app_id:
                     removed = self._apps.pop(i)
+                    self._events = [e for e in self._events if e.get("app_id") != app_id]
                     self._save()
                     return dict(removed)
         raise NotFoundError(f"application {app_id}")
@@ -351,8 +418,9 @@ class ExcelStore:
                 patch = patches.get(rec["id"])
                 if patch:
                     merged = {**rec, **{k: v for k, v in patch.items() if k in schema.APP_KEYS and k != "id"}}
-                    self._apps[i] = _clean(merged, schema.APP_KEYS)
-                    self._apps[i]["id"] = rec["id"]
+                    merged = _sync_after_merge(rec, _clean(merged, schema.APP_KEYS))
+                    merged["id"] = rec["id"]
+                    self._apps[i] = merged
                     changed += 1
             if changed:
                 self._save()
@@ -365,6 +433,7 @@ class ExcelStore:
             next_app = int(self._meta["next_app_id"])
             for fields in apps:
                 rec = _clean(fields, schema.APP_KEYS)
+                rec = _sync_after_merge({}, rec)
                 rec["id"] = next_app
                 next_app += 1
                 if not rec.get("last_updated"):
@@ -382,6 +451,78 @@ class ExcelStore:
                 self._save()
             return len(apps), len(prep)
 
+    # ---------- events ----------
+
+    def list_events(self, app_id: int | None = None) -> list[dict]:
+        self._maybe_reload()
+        with self._lock:
+            rows = self._events if app_id is None else [e for e in self._events if e.get("app_id") == app_id]
+            return [dict(r) for r in sorted(rows, key=lambda e: (str(e.get("date") or "9999"), int(e.get("id") or 0)))]
+
+    def add_event(self, app_id: int, fields: dict, *, force_id: int | None = None) -> dict:
+        with self._lock:
+            self._maybe_reload()
+            if not any(r["id"] == app_id for r in self._apps):
+                raise NotFoundError(f"application {app_id}")
+            rec = _clean(fields, schema.EVENT_KEYS)
+            rec["app_id"] = app_id
+            if force_id is not None:
+                rec["id"] = force_id
+                self._meta["next_event_id"] = max(int(self._meta.get("next_event_id") or 1), force_id + 1)
+            else:
+                rec["id"] = int(self._meta.get("next_event_id") or 1)
+                self._meta["next_event_id"] = rec["id"] + 1
+            self._events.append(rec)
+            self._save()
+            return dict(rec)
+
+    def delete_event(self, event_id: int) -> dict:
+        with self._lock:
+            self._maybe_reload()
+            for i, rec in enumerate(self._events):
+                if rec["id"] == event_id:
+                    removed = self._events.pop(i)
+                    self._save()
+                    return dict(removed)
+        raise NotFoundError(f"event {event_id}")
+
+    def replace_events_for_app(self, app_id: int, rows: list[dict]) -> int:
+        """Importer path: swap an app's whole timeline in one save."""
+        with self._lock:
+            self._maybe_reload()
+            self._events = [e for e in self._events if e.get("app_id") != app_id]
+            next_event = int(self._meta.get("next_event_id") or 1)
+            for fields in rows:
+                rec = _clean(fields, schema.EVENT_KEYS)
+                rec["app_id"] = app_id
+                rec["id"] = next_event
+                next_event += 1
+                self._events.append(rec)
+            self._meta["next_event_id"] = next_event
+            self._save()
+            return len(rows)
+
+    # ---------- employers ----------
+
+    def list_employers(self) -> list[dict]:
+        self._maybe_reload()
+        with self._lock:
+            return [dict(r) for r in self._employers]
+
+    def replace_employers(self, rows: list[dict]) -> int:
+        with self._lock:
+            self._maybe_reload()
+            self._employers = []
+            next_employer = 1
+            for fields in rows:
+                rec = _clean(fields, schema.EMPLOYER_KEYS)
+                rec["id"] = next_employer
+                next_employer += 1
+                self._employers.append(rec)
+            self._meta["next_employer_id"] = next_employer
+            self._save()
+            return len(rows)
+
     # ---------- info ----------
 
     def info(self) -> dict:
@@ -394,4 +535,6 @@ class ExcelStore:
                 "schema_version": self._meta.get("schema_version"),
                 "app_count": len(self._apps),
                 "prep_count": len(self._prep),
+                "event_count": len(self._events),
+                "employer_count": len(self._employers),
             }

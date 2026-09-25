@@ -10,7 +10,7 @@ def test_creates_workbook_on_first_run(tmp_path):
     path = tmp_path / "tracker.xlsx"
     ExcelStore(path)
     wb = load_workbook(path)
-    assert set(wb.sheetnames) == {"Applications", "Interview Prep", "Meta"}
+    assert set(wb.sheetnames) == {"Applications", "Interview Prep", "Events", "Employers", "Meta"}
     assert wb["Applications"]["A1"].value == "ID"
     assert wb["Meta"].sheet_state == "hidden"
 
@@ -82,7 +82,7 @@ def test_v2_workbook_migrates_on_load(tmp_path):
     headers = [c.value for c in wb2["Applications"][1]]
     assert "Salary Min" not in headers
     meta = dict(row[:2] for row in wb2["Meta"].iter_rows(values_only=True))
-    assert meta["schema_version"] == 3
+    assert meta["schema_version"] == 4
 
 
 def test_atomic_save_leaves_no_tmp(store):

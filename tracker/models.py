@@ -3,10 +3,33 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from .excel import schema as xl_schema
+
+_ENUM_FIELDS = {
+    "track": xl_schema.TRACKS,
+    "stage_reached": xl_schema.STAGES,
+    "current_state": xl_schema.CURRENT_STATES,
+    "outcome": xl_schema.OUTCOMES,
+    "closed_by": xl_schema.CLOSED_BY,
+}
 
 
-class ApplicationIn(BaseModel):
+class _V4EnumMixin:
+    @field_validator("track", "stage_reached", "current_state", "outcome", "closed_by",
+                     mode="before", check_fields=False)
+    @classmethod
+    def _check_enum(cls, value, info):
+        if value in (None, ""):
+            return value
+        allowed = _ENUM_FIELDS[info.field_name]
+        if str(value) not in allowed:
+            raise ValueError(f"{info.field_name} must be one of {allowed} (got {value!r})")
+        return value
+
+
+class ApplicationIn(_V4EnumMixin, BaseModel):
     company: str = Field(min_length=1)
     title: str = Field(min_length=1)
     status: str = "Applied"
@@ -19,12 +42,21 @@ class ApplicationIn(BaseModel):
     url: str = ""
     portal_url: str = ""
     notes: str = ""
+    track: str = ""
+    stage_reached: str = ""
+    current_state: str = ""
+    outcome: str = ""
+    closed_by: str = ""
+    gates: str = ""
+    contacts: str = ""
+    next_action: str = ""
+    due: Optional[str] = None  # yyyy-mm-dd
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     geo_status: str = ""
 
 
-class ApplicationPatch(BaseModel):
+class ApplicationPatch(_V4EnumMixin, BaseModel):
     company: Optional[str] = None
     title: Optional[str] = None
     status: Optional[str] = None
@@ -37,6 +69,15 @@ class ApplicationPatch(BaseModel):
     url: Optional[str] = None
     portal_url: Optional[str] = None
     notes: Optional[str] = None
+    track: Optional[str] = None
+    stage_reached: Optional[str] = None
+    current_state: Optional[str] = None
+    outcome: Optional[str] = None
+    closed_by: Optional[str] = None
+    gates: Optional[str] = None
+    contacts: Optional[str] = None
+    next_action: Optional[str] = None
+    due: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     geo_status: Optional[str] = None
@@ -52,6 +93,18 @@ class PrepPatch(BaseModel):
     category: Optional[str] = None
     question: Optional[str] = None
     answer: Optional[str] = None
+
+
+class EventIn(BaseModel):
+    date: Optional[str] = None  # yyyy-mm-dd
+    event: str = Field(min_length=1)
+    note: str = ""
+
+
+class EmployerIn(BaseModel):
+    employer: str = Field(min_length=1)
+    rule: str = ""
+    status: str = ""
 
 
 class PrefillRequest(BaseModel):
