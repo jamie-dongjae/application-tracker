@@ -37,7 +37,8 @@ export function enterView(el, name) {
   }
 
   if (name === 'dashboard' || name === 'insights') {
-    countUp(el);
+    // KPI count-ups run inside the view renderers (so they also fire on data
+    // refreshes); here we only animate the bar fills.
     const fills = el.querySelectorAll('.barlist-fill, .funnel-fill');
     if (fills.length) {
       tl.from(fills, {
@@ -48,7 +49,8 @@ export function enterView(el, name) {
   }
 }
 
-function countUp(el) {
+export function countUp(el) {
+  if (!motionOK()) return;
   el.querySelectorAll('.kpi-value').forEach((node) => {
     const text = node.firstChild;
     if (!text || text.nodeType !== Node.TEXT_NODE) return;

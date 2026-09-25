@@ -11,7 +11,7 @@ import { toast } from './components/toast.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderPipeline } from './views/pipeline.js';
 import { renderMap, refreshMapData, onThemeChange } from './views/map.js';
-import { renderInsights } from './views/analytics.js';
+import { renderInsights, destroyInsights, onInsightsThemeChange } from './views/insights/index.js';
 import { renderPrep } from './views/prep.js';
 
 const VIEWS = {
@@ -28,9 +28,13 @@ function currentView() {
 }
 
 let lastAnimatedView = null;
+let prevView = null;
 
 function renderCurrent() {
   const name = currentView();
+  // Insights owns echarts/WebGL instances — release them on the way out.
+  if (prevView === 'insights' && name !== 'insights') destroyInsights();
+  prevView = name;
   state.view = name;
   document.querySelectorAll('.view').forEach((sec) => { sec.hidden = sec.id !== `view-${name}`; });
   document.querySelectorAll('.nav a').forEach((a) => {
@@ -51,7 +55,8 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem('apptracker-theme', theme);
   onThemeChange(document.getElementById('view-map'));
-  if (state.view === 'map') renderCurrent();
+  onInsightsThemeChange(); // chart themes are baked at init — rebuild
+  if (state.view === 'map' || state.view === 'insights') renderCurrent();
 }
 
 document.getElementById('theme-btn').onclick = () => {

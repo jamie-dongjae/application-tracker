@@ -1,7 +1,8 @@
 // Dashboard: weekly goal, KPIs, pipeline snapshot, next actions, activity.
 
-import { state, ACTIVE_STATUSES, BOARD_STATUSES, STATUS_COLORS, daysSince, esc } from '../state.js';
+import { state, ACTIVE_STATUSES, BOARD_STATUSES, REACHED_OFFER, STATUS_COLORS, daysSince, esc } from '../state.js';
 import { openDetail } from '../components/detail.js';
+import { countUp, motionOK } from '../components/motion.js';
 
 function startOfWeek() {
   const now = new Date();
@@ -21,7 +22,8 @@ export function renderDashboard(el) {
   const submitted = apps.filter((a) => a.status !== 'Wishlist').length;
   const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status)).length;
   const responseRate = submitted ? Math.round((responded / submitted) * 100) : 0;
-  const offers = apps.filter((a) => a.status === 'Offer').length;
+  const offers = apps.filter((a) => REACHED_OFFER.includes(a.status)).length;
+  const accepted = apps.filter((a) => a.status === 'Accepted').length;
 
   const pct = Math.min(1, thisWeek / goal);
   const C = 2 * Math.PI * 26;
@@ -73,7 +75,7 @@ export function renderDashboard(el) {
       <div class="panel">
         <div class="kpi-label">Offers</div>
         <div class="kpi-value ${offers ? 'kpi-accent' : ''}">${offers}</div>
-        <div class="kpi-sub">${offers ? 'congratulations' : 'keep going'}</div>
+        <div class="kpi-sub">${accepted ? `🎉 ${accepted} accepted` : offers ? 'congratulations' : 'keep going'}</div>
       </div>
     </div>
 
@@ -125,6 +127,16 @@ export function renderDashboard(el) {
           </div>`).join('') || `<div class="empty">No activity yet.</div>`}
       </div>
     </div>`;
+
+  countUp(el);
+  const fg = el.querySelector('.ring-fg');
+  if (fg && motionOK()) {
+    // GSAP owns this sweep; disable the CSS transition so they don't fight.
+    fg.style.transition = 'none';
+    gsap.fromTo(fg,
+      { attr: { 'stroke-dashoffset': C } },
+      { attr: { 'stroke-dashoffset': C * (1 - pct) }, duration: 1.1, ease: 'power3.out' });
+  }
 
   el.querySelectorAll('[data-open]').forEach((row) => {
     row.onclick = () => openDetail(Number(row.dataset.open));
