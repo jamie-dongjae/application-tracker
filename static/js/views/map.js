@@ -2,7 +2,7 @@
 // filter sidebar, dossier panel, unmapped tray, geocode backfill.
 
 import { api } from '../api.js';
-import { state, STATUSES, STATUS_COLORS, CLOSED_STATUSES, REACHED_OFFER, NEXT_STATUS, getApp, patchApplication, undo, esc, fmtDate } from '../state.js';
+import { state, STATUSES, STATUS_COLORS, CLOSED_STATUSES, reachedOfferCount, NEXT_STATUS, getApp, patchApplication, undo, esc, fmtDate } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
@@ -13,10 +13,13 @@ const STATUS_HEX = {
   'Rejected': '#f0647d', 'Withdrawn': '#66759b',
 };
 
-// Hyperreal space view: satellite imagery on a globe with atmosphere.
-// Esri World Imagery + CARTO label overlay — free with attribution.
-// One zoom model everywhere: SPACE (full globe) <-> FOCUS (city-region).
-const ZOOM = { min: 0.9, max: 11, focus: 6, clusterCap: 8.5, frameCap: 5.5 };
+// Hyperreal space view: satellite imagery on a 3D-terrain globe with
+// atmosphere. Every tile service is keyless and free with attribution —
+// Esri World Imagery + its companion reference layers (labels, roads) and
+// the AWS Open Data Terrarium elevation set. No API keys, no watermarks.
+// One zoom model everywhere: SPACE (full globe) <-> FOCUS (city-region)
+// <-> STREET (rooftop detail).
+const ZOOM = { min: 0.9, max: 16, focus: 6, clusterCap: 8.5, frameCap: 5.5 };
 
 const SPACE_STYLE = {
   version: 8,
@@ -31,6 +34,8 @@ const SPACE_STYLE = {
     'fog-ground-blend': 0.85,
     'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.4, 10, 0],
   },
+  // Real elevation: mountains rise out of the globe when tilted.
+  terrain: { source: 'dem', exaggeration: 1.35 },
   sources: {
     satellite: {
       type: 'raster',
@@ -43,16 +48,40 @@ const SPACE_STYLE = {
     },
     labels: {
       type: 'raster',
-      tiles: ['https://basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png'],
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
       tileSize: 256,
-      attribution: '© CARTO © OpenStreetMap contributors',
+      attribution: '© Esri',
+    },
+    roads: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: '© Esri',
+    },
+    dem: {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 15,
+      attribution: 'Terrain © Mapzen/AWS Open Data',
     },
   },
   layers: [
     { id: 'space', type: 'background', paint: { 'background-color': '#01030a' } },
+    // raster-fade-duration is 0 everywhere: MapLibre's cross-fade tracking
+    // throws 'clearFadeHold' errors on faded raster tiles when terrain is on.
     { id: 'satellite', type: 'raster', source: 'satellite',
-      paint: { 'raster-fade-duration': 250, 'raster-saturation': 0.08, 'raster-contrast': 0.04 } },
-    { id: 'labels', type: 'raster', source: 'labels', minzoom: 3.5, paint: { 'raster-opacity': 0.9 } },
+      paint: { 'raster-fade-duration': 0, 'raster-saturation': 0.08, 'raster-contrast': 0.04 } },
+    // Soft relief shading gives the imagery depth before street level.
+    { id: 'relief', type: 'hillshade', source: 'dem', maxzoom: 14,
+      paint: { 'hillshade-exaggeration': 0.3, 'hillshade-shadow-color': '#04070f',
+               'hillshade-highlight-color': 'rgba(255,255,255,.08)', 'hillshade-accent-color': '#0a1c2e' } },
+    { id: 'roads', type: 'raster', source: 'roads', minzoom: 9,
+      paint: { 'raster-fade-duration': 0,
+               'raster-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0, 11, 0.55, 14, 0.7] } },
+    { id: 'labels', type: 'raster', source: 'labels', minzoom: 3.5,
+      paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.9 } },
   ],
 };
 
@@ -164,9 +193,10 @@ function buildMapOnce(el) {
     zoom: cinematic ? 0.9 : 2.4,
     minZoom: ZOOM.min,
     maxZoom: ZOOM.max,
+    maxPitch: 70,
     attributionControl: { compact: true },
   });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
 
 
   map.on('load', () => {
@@ -241,7 +271,7 @@ let dossierId = null;
 function paintStats(el) {
   const total = state.apps.length;
   const activeN = state.apps.filter((a) => ['Applied', 'Interview'].includes(a.status)).length;
-  const offers = state.apps.filter((a) => REACHED_OFFER.includes(a.status)).length;
+  const offers = reachedOfferCount();
   const rejected = state.apps.filter((a) => a.status === 'Rejected').length;
   el.querySelector('#map-stats').innerHTML =
     `<span><b>${total}</b> TRACKED</span><span><b>${activeN}</b> ACTIVE</span>` +
