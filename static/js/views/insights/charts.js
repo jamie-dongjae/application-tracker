@@ -206,6 +206,86 @@ export function terrainOption(m, t) {
   });
 }
 
+// Horizontal bar: closed applications by outcome bucket.
+export function outcomeBarOption(data, t) {
+  return merge(t, {
+    tooltip: Object.assign(baseOption(t).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' } }),
+    grid: { left: 8, right: 24, top: 8, bottom: 4, containLabel: true },
+    xAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: t.lineSoft } },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+    },
+    yAxis: {
+      type: 'category', data: data.map((d) => d.name),
+      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
+      axisLabel: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
+    },
+    series: [{
+      type: 'bar',
+      barMaxWidth: 14,
+      itemStyle: { color: t.status.Rejected, borderRadius: [0, 4, 4, 0], opacity: 0.85 },
+      label: { show: true, position: 'right', color: t.textDim, fontSize: 10, fontFamily: t.fontMono },
+      data: data.map((d) => d.value),
+    }],
+  });
+}
+
+// Funnel: how far applications travel through the 7-stage v4 funnel.
+export function funnelOption(data, t) {
+  const palette = [t.status.Applied, t.accent, t.status.Interview, t.status.Wishlist,
+    t.status.Offer, t.status.Declined, t.status.Accepted];
+  return merge(t, {
+    color: palette,
+    tooltip: Object.assign(baseOption(t).tooltip, { formatter: '{b}: <b>{c}</b>' }),
+    series: [{
+      type: 'funnel',
+      sort: 'none',
+      top: 8, bottom: 8, left: '6%', width: '72%',
+      gap: 3,
+      minSize: '4%',
+      itemStyle: { borderColor: t.panel, borderWidth: 2, opacity: 0.9 },
+      label: { show: true, position: 'right', color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI, formatter: '{b}  {c}' },
+      labelLine: { lineStyle: { color: t.line } },
+      data,
+    }],
+  });
+}
+
+// Stacked horizontal bar: gate flags, closed vs still-active applications.
+export function gatesBarOption(data, t) {
+  return merge(t, {
+    tooltip: Object.assign(baseOption(t).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' } }),
+    legend: {
+      top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8,
+      textStyle: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
+    },
+    grid: { left: 8, right: 24, top: 26, bottom: 4, containLabel: true },
+    xAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: t.lineSoft } },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+    },
+    yAxis: {
+      type: 'category', data: data.map((d) => d.gate),
+      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
+      axisLabel: { color: t.textDim, fontSize: 10, fontFamily: t.fontMono },
+    },
+    series: [
+      {
+        name: 'active', type: 'bar', stack: 'g', barMaxWidth: 12,
+        itemStyle: { color: t.accent, opacity: 0.85 },
+        data: data.map((d) => d.active),
+      },
+      {
+        name: 'closed', type: 'bar', stack: 'g', barMaxWidth: 12,
+        itemStyle: { color: t.textFaint, borderRadius: [0, 4, 4, 0], opacity: 0.6 },
+        data: data.map((d) => d.closed),
+      },
+    ],
+  });
+}
+
 // 2D stand-in for the terrain when WebGL / echarts-gl is unavailable.
 export function terrainFallbackOption(m, t) {
   return merge(t, {

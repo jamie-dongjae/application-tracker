@@ -1,7 +1,17 @@
 // Pure data selectors for the Insights dashboard: everything is computed
 // from state and returned as plain data — no DOM, no echarts in here.
 
-import { state, STATUSES, reachedOfferCount } from '../../state.js';
+import { state, STATUSES, STAGES, STAGE_LABELS, OUTCOME_LABELS, NON_PIPELINE_TRACKS,
+  reachedOfferCount, splitGates } from '../../state.js';
+
+// bridge/nurture tracks never count toward pipeline KPIs or funnels.
+export function pipelineApps() {
+  return state.apps.filter((a) => !NON_PIPELINE_TRACKS.includes(a.track));
+}
+
+export function excludedCount() {
+  return state.apps.filter((a) => NON_PIPELINE_TRACKS.includes(a.track)).length;
+}
 
 const STAGE_IDX = {
   'Applied': 1, 'Interview': 2, 'Offer': 3, 'Accepted': 3, 'Declined': 3,
@@ -32,11 +42,12 @@ function furthestStage(app, tmap) {
 }
 
 export function kpis() {
-  const apps = state.apps;
+  const apps = pipelineApps();
   const submitted = apps.filter((a) => a.status !== 'Wishlist');
   const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status));
   return {
-    tracked: apps.length,
+    tracked: state.apps.length,
+    excluded: excludedCount(),
     submitted: submitted.length,
     responded: responded.length,
     responseRate: submitted.length ? Math.round((responded.length / submitted.length) * 100) : 0,
@@ -58,7 +69,7 @@ export function sankeyData() {
   };
 
   let sawWishlistOrigin = false;
-  for (const app of state.apps) {
+  for (const app of pipelineApps()) {
     if (app.status === 'Wishlist') continue; // shown in the KPI row instead
     const furthest = furthestStage(app, tmap);
     const fromWishlist = (tmap.get(app.id) || []).some((t) => t.from === 'Wishlist');
@@ -125,15 +136,63 @@ function countBy(rows, keyFn) {
 }
 
 export function sourceRose(limit = 8) {
-  const submitted = state.apps.filter((a) => a.status !== 'Wishlist');
+  const submitted = pipelineApps().filter((a) => a.status !== 'Wishlist');
   return countBy(submitted, (a) => a.source || 'Unknown').slice(0, limit)
     .map(([name, value]) => ({ name, value }));
 }
 
 export function workTypeDonut() {
-  const submitted = state.apps.filter((a) => a.status !== 'Wishlist');
+  const submitted = pipelineApps().filter((a) => a.status !== 'Wishlist');
   return countBy(submitted, (a) => a.work_type || 'Unspecified')
     .map(([name, value]) => ({ name, value }));
+}
+
+// ---- v4 selectors ----
+
+// Closed pipeline apps bucketed by outcome type, ordered by count.
+export function outcomeBreakdown() {
+  const closed = pipelineApps().filter((a) => a.current_state === 'closed' && a.outcome);
+  return countBy(closed, (a) => OUTCOME_LABELS[a.outcome] || a.outcome)
+    .map(([name, value]) => ({ name, value }))
+    .reverse(); // horizontal bar: biggest on top
+}
+
+// Cumulative funnel: how many pipeline apps reached each stage or further.
+export function stageFunnel() {
+  const apps = pipelineApps().filter((a) => a.stage_reached);
+  const idx = Object.fromEntries(STAGES.map((s, i) => [s, i]));
+  return STAGES.map((stage, i) => ({
+    name: STAGE_LABELS[stage] || stage,
+    value: apps.filter((a) => (idx[a.stage_reached] ?? -1) >= i).length,
+  })).filter((row, i) => row.value > 0 || i < 3);
+}
+
+// Gate flags split by whether the application is closed or still in play.
+export function gatesData(limit = 10) {
+  const counts = new Map();
+  for (const a of pipelineApps()) {
+    for (const g of splitGates(a.gates)) {
+      if (!counts.has(g)) counts.set(g, { gate: g, closed: 0, active: 0 });
+      counts.get(g)[a.current_state === 'closed' ? 'closed' : 'active'] += 1;
+    }
+  }
+  return [...counts.values()]
+    .sort((x, y) => (y.closed + y.active) - (x.closed + x.active))
+    .slice(0, limit)
+    .reverse();
+}
+
+// Actionable items sorted by due date (missing due last).
+export function nextActionList() {
+  const today = new Date().toISOString().slice(0, 10);
+  return state.apps
+    .filter((a) => a.next_action && a.current_state !== 'closed')
+    .map((a) => ({
+      id: a.id, company: a.company, title: a.title,
+      next_action: a.next_action, due: a.due ? String(a.due).slice(0, 10) : '',
+      overdue: !!a.due && String(a.due).slice(0, 10) < today,
+    }))
+    .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
 }
 
 function mondayOf(date) {

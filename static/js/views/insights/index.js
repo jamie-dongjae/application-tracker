@@ -3,7 +3,8 @@
 // re-render, dispose everything when the user navigates away (main.js calls
 // destroyInsights) so WebGL contexts never pile up.
 
-import { state } from '../../state.js';
+import { state, esc } from '../../state.js';
+import { openDetail } from '../../components/detail.js';
 import { countUp } from '../../components/motion.js';
 import { chartTokens } from './theme.js';
 import * as derive from './derive.js';
@@ -55,6 +56,16 @@ const SKELETON = `
       <div class="chart-box short" data-chart="calendar"></div></div>
     <div class="panel span-4"><h2 class="panel-title">Work type</h2>
       <div class="chart-box short" data-chart="worktype"></div></div>
+    <div class="panel span-5"><h2 class="panel-title">Funnel — furthest stage reached</h2>
+      <div class="chart-box" data-chart="funnel"></div></div>
+    <div class="panel span-7"><h2 class="panel-title">Closed outcomes — how applications end</h2>
+      <div class="chart-box" data-chart="outcomes"></div></div>
+    <div class="panel span-6"><h2 class="panel-title">Gates — known blockers on postings</h2>
+      <div class="chart-box" data-chart="gates"></div></div>
+    <div class="panel span-6"><h2 class="panel-title">Next actions — due list</h2>
+      <div class="row-list" id="ins-next-actions"></div></div>
+    <div class="panel span-12 ins-employers"><h2 class="panel-title">Employer rules</h2>
+      <div id="ins-employers"></div></div>
   </div>`;
 
 export function renderInsights(el) {
@@ -77,6 +88,8 @@ export function renderInsights(el) {
     initCharts(el);
   }
   paintKpis(el);
+  paintNextActions(el);
+  paintEmployers(el);
   applyData();
 }
 
@@ -107,6 +120,9 @@ function applyData() {
     rose: charts.roseOption(derive.sourceRose(), t),
     calendar: charts.calendarOption(derive.calendarData(), t),
     worktype: charts.donutOption(derive.workTypeDonut(), t),
+    funnel: charts.funnelOption(derive.stageFunnel(), t),
+    outcomes: charts.outcomeBarOption(derive.outcomeBreakdown(), t),
+    gates: charts.gatesBarOption(derive.gatesData(), t),
     terrain: (!terrainBroken && hasWebGL() && hasGL())
       ? charts.terrainOption(terrain, t)
       : charts.terrainFallbackOption(terrain, t),
@@ -143,7 +159,7 @@ function paintKpis(el) {
       <div class="kpi-value" style="font-size:24px">${valueHtml}</div>
       ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}</div>`;
   box.innerHTML =
-    kpi('Tracked', String(k.tracked)) +
+    kpi('Tracked', String(k.tracked), k.excluded ? `excl. ${k.excluded} bridge/nurture` : '') +
     kpi('Submitted', String(k.submitted)) +
     kpi('Response rate', `${k.responseRate}<span class="faint" style="font-size:15px">%</span>`,
       `${k.responded} of ${k.submitted}`) +
@@ -152,6 +168,37 @@ function paintKpis(el) {
       ? `<span style="color:var(--s-accepted)">${k.accepted}</span>` : '0',
       k.accepted ? '🎉' : '');
   countUp(box);
+}
+
+function paintNextActions(el) {
+  const box = el.querySelector('#ins-next-actions');
+  if (!box) return;
+  const items = derive.nextActionList();
+  box.innerHTML = items.map((a) => `
+    <div class="row-item" data-open="${a.id}">
+      <span class="dot" style="background:${a.overdue ? 'var(--s-rejected)' : 'var(--accent)'}"></span>
+      <div class="row-main">
+        <div class="row-title">${esc(a.company)} — ${esc(a.title)}</div>
+        <div class="row-sub">${esc(a.next_action)}</div>
+      </div>
+      <span class="row-aside ${a.overdue ? 'stale' : ''}">${a.due ? esc(a.due.slice(5)) + (a.overdue ? ' ⚠' : '') : '—'}</span>
+    </div>`).join('') || `<div class="empty">Nothing due — inbox zero.</div>`;
+  box.querySelectorAll('[data-open]').forEach((row) => {
+    row.onclick = () => openDetail(Number(row.dataset.open));
+  });
+}
+
+function paintEmployers(el) {
+  const box = el.querySelector('#ins-employers');
+  if (!box) return;
+  const rows = state.employers;
+  box.innerHTML = rows.length ? `<table><tbody>
+    ${rows.map((e) => `<tr>
+      <td>${esc(e.employer)}</td>
+      <td>${esc(e.rule || '')}</td>
+      <td class="faint">${esc(e.status || '')}</td>
+    </tr>`).join('')}
+  </tbody></table>` : `<div class="empty">No employer rules recorded.</div>`;
 }
 
 export function destroyInsights() {
