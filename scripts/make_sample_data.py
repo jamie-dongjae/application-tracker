@@ -58,8 +58,9 @@ COMPANIES = [
 
 SOURCES = ["LinkedIn", "Company site", "Referral", "Indeed", "Otta"]
 SPONSOR = ["Mentioned", "Not offered", ""]
-STATUS_WEIGHTED = (["Applied"] * 9 + ["Interview"] * 5 + ["Offer"] * 1 +
-                   ["Rejected"] * 12 + ["Withdrawn"] * 1 + ["Wishlist"] * 2)
+STATUS_WEIGHTED = (["Applied"] * 8 + ["Interview"] * 5 + ["Offer"] * 2 +
+                   ["Accepted"] * 1 + ["Declined"] * 2 +
+                   ["Rejected"] * 9 + ["Withdrawn"] * 1 + ["Wishlist"] * 2)
 
 PREP = [
     ("Behavioral", "Tell me about a time you resolved a conflict in a team.",
@@ -102,7 +103,8 @@ def build(out: Path, *, seed: int = 7) -> ExcelStore:
         if i >= 30:
             break
         status = rng.choice(STATUS_WEIGHTED)
-        applied = today - timedelta(days=rng.randint(0, 84))
+        # ~6 months of history so the Insights calendar heatmap has texture.
+        applied = today - timedelta(days=rng.randint(0, 168))
         remote = rng.random() < 0.12
         city = rng.choice(list(CITIES))
         lat, lng = CITIES[city]
@@ -122,9 +124,49 @@ def build(out: Path, *, seed: int = 7) -> ExcelStore:
             "geo_status": "remote" if remote else "ok",
         }
         apps.append(rec)
+
+    # Weighted choice doesn't guarantee every outcome shows up in 30 draws;
+    # the demo must showcase the full closed tray, so pin a few.
+    def ensure(status: str, idx: int) -> None:
+        if not any(a["status"] == status for a in apps):
+            apps[idx]["status"] = status
+            if not apps[idx]["date_applied"]:
+                apps[idx]["date_applied"] = (today - timedelta(days=rng.randint(14, 90))).isoformat()
+
+    ensure("Accepted", 3)
+    ensure("Declined", 11)
+    ensure("Offer", 17)
+    ensure("Withdrawn", 23)
+
     prep = [{"category": c, "question": q, "answer": a} for c, q, a in PREP]
     store.bulk_add(apps, prep)
     return store
+
+
+def synth_transitions(apps: list, *, seed: int = 11) -> list:
+    """Plausible stage-history chains so the demo sankey shows real flow."""
+    rng = random.Random(seed)
+    out = []
+    for a in apps:
+        status = a["status"]
+        if status in ("Wishlist", "Applied") or not a["date_applied"]:
+            continue
+        path = ["Applied"]
+        if status in ("Interview", "Offer", "Accepted", "Declined"):
+            path.append("Interview")
+        if status in ("Offer", "Accepted", "Declined"):
+            path.append("Offer")
+        if status in ("Accepted", "Declined"):
+            path.append(status)
+        if status in ("Rejected", "Withdrawn"):
+            if rng.random() < 0.35:
+                path.append("Interview")
+            path.append(status)
+        day = a["date_applied"]
+        for frm, to in zip(path, path[1:]):
+            day = day + timedelta(days=rng.randint(3, 12))
+            out.append({"ts": f"{day.isoformat()}T10:00:00", "id": a["id"], "from": frm, "to": to})
+    return out
 
 
 def main() -> None:
@@ -149,6 +191,7 @@ def main() -> None:
     json_path.write_text(json.dumps(
         {"applications": [{**a, "date_applied": str(a["date_applied"])} for a in apps],
          "prep": prep,
+         "transitions": synth_transitions(apps),
          "settings": {"weekly_goal": 5, "stale_days": 14}},
         indent=1, default=str))
     print(f"wrote {out} ({len(apps)} applications, {len(prep)} prep) and {json_path}")

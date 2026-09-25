@@ -5,7 +5,7 @@
    "company": "Northwind Analytics",
    "title": "Data Analyst",
    "status": "Interview",
-   "date_applied": "2026-07-25",
+   "date_applied": "2026-08-18",
    "location": "Amsterdam, Netherlands",
    "work_type": "Hybrid",
    "source": "Otta",
@@ -17,14 +17,14 @@
    "latitude": 52.3728,
    "longitude": 4.8936,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 2,
    "company": "Bluefjord",
    "title": "Data Engineer",
    "status": "Interview",
-   "date_applied": "2026-05-31",
+   "date_applied": "2026-04-29",
    "location": "Remote (EU)",
    "work_type": "Remote",
    "source": "Company site",
@@ -36,14 +36,14 @@
    "latitude": "",
    "longitude": "",
    "geo_status": "remote",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 3,
    "company": "Cobalt Labs",
    "title": "Machine Learning Engineer",
    "status": "Applied",
-   "date_applied": "2026-06-19",
+   "date_applied": "2026-06-06",
    "location": "Eindhoven, Netherlands",
    "work_type": "Hybrid",
    "source": "Otta",
@@ -55,14 +55,14 @@
    "latitude": 51.4416,
    "longitude": 5.4697,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 4,
    "company": "Meridian Pay",
    "title": "Product Analyst",
    "status": "Applied",
-   "date_applied": "2026-06-02",
+   "date_applied": "2026-05-04",
    "location": "Eindhoven, Netherlands",
    "work_type": "Hybrid",
    "source": "Otta",
@@ -74,14 +74,14 @@
    "latitude": 51.4416,
    "longitude": 5.4697,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 5,
    "company": "Arcline Systems",
    "title": "Backend Engineer",
    "status": "Interview",
-   "date_applied": "2026-08-07",
+   "date_applied": "2026-09-13",
    "location": "Amsterdam, Netherlands",
    "work_type": "Hybrid",
    "source": "Referral",
@@ -93,14 +93,14 @@
    "latitude": 52.3728,
    "longitude": 4.8936,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 6,
    "company": "Statmill",
    "title": "Quantitative Analyst",
    "status": "Applied",
-   "date_applied": "2026-06-05",
+   "date_applied": "2026-05-10",
    "location": "Remote (EU)",
    "work_type": "Remote",
    "source": "Otta",
@@ -112,14 +112,14 @@
    "latitude": "",
    "longitude": "",
    "geo_status": "remote",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 7,
    "company": "Vector & Vine",
    "title": "BI Developer",
    "status": "Applied",
-   "date_applied": "2026-07-31",
+   "date_applied": "2026-08-30",
    "location": "Copenhagen, Denmark",
    "work_type": "Hybrid",
    "source": "Referral",
@@ -131,14 +131,14 @@
    "latitude": 55.6761,
    "longitude": 12.5683,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 8,
    "company": "Halcyon Grid",
    "title": "Data Scientist",
-   "status": "Rejected",
-   "date_applied": "2026-08-05",
+   "status": "Declined",
+   "date_applied": "2026-09-09",
    "location": "Paris, France",
    "work_type": "Hybrid",
    "source": "Indeed",
@@ -150,14 +150,14 @@
    "latitude": 48.8566,
    "longitude": 2.3522,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 9,
    "company": "Pinebrook",
    "title": "Analytics Engineer",
-   "status": "Rejected",
-   "date_applied": "2026-06-20",
+   "status": "Declined",
+   "date_applied": "2026-06-08",
    "location": "London, United Kingdom",
    "work_type": "",
    "source": "Referral",
@@ -169,14 +169,14 @@
    "latitude": 51.5072,
    "longitude": -0.1276,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 10,
    "company": "Quartzline",
    "title": "Research Analyst",
    "status": "Applied",
-   "date_applied": "2026-07-21",
+   "date_applied": "2026-08-10",
    "location": "Eindhoven, Netherlands",
    "work_type": "Hybrid",
    "source": "Otta",
@@ -188,14 +188,14 @@
    "latitude": 51.4416,
    "longitude": 5.4697,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 11,
    "company": "Delta Verge",
    "title": "Platform Engineer",
-   "status": "Rejected",
-   "date_applied": "2026-06-11",
+   "status": "Declined",
+   "date_applied": "2026-05-22",
    "location": "Stockholm, Sweden",
    "work_type": "",
    "source": "Referral",
@@ -207,14 +207,14 @@
    "latitude": 59.3293,
    "longitude": 18.0686,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 12,
    "company": "Lumen Forge",
    "title": "Software Engineer",
    "status": "Applied",
-   "date_applied": "2026-07-29",
+   "date_applied": "2026-08-26",
    "location": "Utrecht, Netherlands",
    "work_type": "Onsite",
    "source": "Company site",
@@ -226,14 +226,14 @@
    "latitude": 52.0907,
    "longitude": 5.1214,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 13,
    "company": "Osprey Cloud",
    "title": "DevOps Engineer",
-   "status": "Interview",
-   "date_applied": "2026-08-08",
+   "status": "Offer",
+   "date_applied": "2026-09-15",
    "location": "Rotterdam, Netherlands",
    "work_type": "Onsite",
    "source": "Referral",
@@ -245,14 +245,14 @@
    "latitude": 51.9225,
    "longitude": 4.4792,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 14,
    "company": "Tidewater AI",
    "title": "ML Ops Engineer",
    "status": "Interview",
-   "date_applied": "2026-05-29",
+   "date_applied": "2026-04-26",
    "location": "Zurich, Switzerland",
    "work_type": "",
    "source": "LinkedIn",
@@ -264,14 +264,14 @@
    "latitude": 47.3769,
    "longitude": 8.5417,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 15,
    "company": "Redshift Labs",
    "title": "Data Analyst",
-   "status": "Applied",
-   "date_applied": "2026-06-14",
+   "status": "Interview",
+   "date_applied": "2026-05-27",
    "location": "Rotterdam, Netherlands",
    "work_type": "Hybrid",
    "source": "Referral",
@@ -283,14 +283,14 @@
    "latitude": 51.9225,
    "longitude": 4.4792,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 16,
    "company": "Northwind Analytics (NL)",
    "title": "Data Analyst",
    "status": "Rejected",
-   "date_applied": "2026-06-17",
+   "date_applied": "2026-06-03",
    "location": "Munich, Germany",
    "work_type": "Onsite",
    "source": "LinkedIn",
@@ -302,14 +302,14 @@
    "latitude": 48.1351,
    "longitude": 11.582,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 17,
    "company": "Bluefjord (NL)",
    "title": "Data Engineer",
    "status": "Interview",
-   "date_applied": "2026-07-23",
+   "date_applied": "2026-08-13",
    "location": "London, United Kingdom",
    "work_type": "Hybrid",
    "source": "Company site",
@@ -321,14 +321,14 @@
    "latitude": 51.5072,
    "longitude": -0.1276,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 18,
    "company": "Cobalt Labs (NL)",
    "title": "Machine Learning Engineer",
    "status": "Applied",
-   "date_applied": "2026-07-13",
+   "date_applied": "2026-07-24",
    "location": "Warsaw, Poland",
    "work_type": "",
    "source": "LinkedIn",
@@ -340,14 +340,14 @@
    "latitude": 52.2297,
    "longitude": 21.0122,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 19,
    "company": "Meridian Pay (NL)",
    "title": "Product Analyst",
    "status": "Offer",
-   "date_applied": "2026-06-23",
+   "date_applied": "2026-06-15",
    "location": "Warsaw, Poland",
    "work_type": "Hybrid",
    "source": "Indeed",
@@ -359,14 +359,14 @@
    "latitude": 52.2297,
    "longitude": 21.0122,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 20,
    "company": "Arcline Systems (NL)",
    "title": "Backend Engineer",
-   "status": "Applied",
-   "date_applied": "2026-06-21",
+   "status": "Interview",
+   "date_applied": "2026-06-11",
    "location": "Copenhagen, Denmark",
    "work_type": "",
    "source": "Company site",
@@ -378,14 +378,14 @@
    "latitude": 55.6761,
    "longitude": 12.5683,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 21,
    "company": "Statmill (NL)",
    "title": "Quantitative Analyst",
    "status": "Applied",
-   "date_applied": "2026-07-22",
+   "date_applied": "2026-08-11",
    "location": "Copenhagen, Denmark",
    "work_type": "Hybrid",
    "source": "LinkedIn",
@@ -397,14 +397,14 @@
    "latitude": 55.6761,
    "longitude": 12.5683,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 22,
    "company": "Vector & Vine (NL)",
    "title": "BI Developer",
    "status": "Rejected",
-   "date_applied": "2026-05-30",
+   "date_applied": "2026-04-28",
    "location": "The Hague, Netherlands",
    "work_type": "Hybrid",
    "source": "Company site",
@@ -416,14 +416,14 @@
    "latitude": 52.0705,
    "longitude": 4.3007,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 23,
    "company": "Halcyon Grid (NL)",
    "title": "Data Scientist",
-   "status": "Rejected",
-   "date_applied": "2026-06-27",
+   "status": "Declined",
+   "date_applied": "2026-06-23",
    "location": "Berlin, Germany",
    "work_type": "Hybrid",
    "source": "Otta",
@@ -435,14 +435,14 @@
    "latitude": 52.52,
    "longitude": 13.405,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 24,
    "company": "Pinebrook (NL)",
    "title": "Analytics Engineer",
-   "status": "Rejected",
-   "date_applied": "2026-08-07",
+   "status": "Withdrawn",
+   "date_applied": "2026-09-12",
    "location": "Barcelona, Spain",
    "work_type": "",
    "source": "Indeed",
@@ -454,14 +454,14 @@
    "latitude": 41.3874,
    "longitude": 2.1686,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 25,
    "company": "Quartzline (NL)",
    "title": "Research Analyst",
    "status": "Interview",
-   "date_applied": "2026-07-31",
+   "date_applied": "2026-08-30",
    "location": "Munich, Germany",
    "work_type": "Hybrid",
    "source": "Company site",
@@ -473,14 +473,14 @@
    "latitude": 48.1351,
    "longitude": 11.582,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 26,
    "company": "Delta Verge (NL)",
    "title": "Platform Engineer",
    "status": "Applied",
-   "date_applied": "2026-06-18",
+   "date_applied": "2026-06-05",
    "location": "Berlin, Germany",
    "work_type": "Hybrid",
    "source": "LinkedIn",
@@ -492,14 +492,14 @@
    "latitude": 52.52,
    "longitude": 13.405,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 27,
    "company": "Lumen Forge (NL)",
    "title": "Software Engineer",
    "status": "Rejected",
-   "date_applied": "2026-07-25",
+   "date_applied": "2026-08-18",
    "location": "Berlin, Germany",
    "work_type": "Hybrid",
    "source": "LinkedIn",
@@ -511,14 +511,14 @@
    "latitude": 52.52,
    "longitude": 13.405,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 28,
    "company": "Osprey Cloud (NL)",
    "title": "DevOps Engineer",
    "status": "Rejected",
-   "date_applied": "2026-06-26",
+   "date_applied": "2026-06-21",
    "location": "The Hague, Netherlands",
    "work_type": "Onsite",
    "source": "Otta",
@@ -530,14 +530,14 @@
    "latitude": 52.0705,
    "longitude": 4.3007,
    "geo_status": "ok",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 29,
    "company": "Tidewater AI (NL)",
    "title": "ML Ops Engineer",
-   "status": "Rejected",
-   "date_applied": "2026-07-29",
+   "status": "Accepted",
+   "date_applied": "2026-08-25",
    "location": "Remote (EU)",
    "work_type": "Remote",
    "source": "Indeed",
@@ -549,14 +549,14 @@
    "latitude": "",
    "longitude": "",
    "geo_status": "remote",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   },
   {
    "id": 30,
    "company": "Redshift Labs (NL)",
    "title": "Data Analyst",
-   "status": "Rejected",
-   "date_applied": "2026-07-05",
+   "status": "Accepted",
+   "date_applied": "2026-07-08",
    "location": "Remote (EU)",
    "work_type": "Remote",
    "source": "Referral",
@@ -568,7 +568,7 @@
    "latitude": "",
    "longitude": "",
    "geo_status": "remote",
-   "last_updated": "2026-08-13T09:11:35"
+   "last_updated": "2026-09-25T20:18:33"
   }
  ],
  "prep": [
@@ -619,6 +619,230 @@
    "category": "Motivation",
    "question": "Where do you see yourself in five years?",
    "answer": "Growing from IC excellence toward owning a problem space. Tips: keep it honest, not rehearsed."
+  }
+ ],
+ "transitions": [
+  {
+   "ts": "2026-08-28T10:00:00",
+   "id": 1,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-05-10T10:00:00",
+   "id": 2,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-23T10:00:00",
+   "id": 5,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-19T10:00:00",
+   "id": 8,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-30T10:00:00",
+   "id": 8,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-10-12T10:00:00",
+   "id": 8,
+   "from": "Offer",
+   "to": "Declined"
+  },
+  {
+   "ts": "2026-06-14T10:00:00",
+   "id": 9,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-19T10:00:00",
+   "id": 9,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-06-30T10:00:00",
+   "id": 9,
+   "from": "Offer",
+   "to": "Declined"
+  },
+  {
+   "ts": "2026-06-01T10:00:00",
+   "id": 11,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-13T10:00:00",
+   "id": 11,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-06-18T10:00:00",
+   "id": 11,
+   "from": "Offer",
+   "to": "Declined"
+  },
+  {
+   "ts": "2026-09-19T10:00:00",
+   "id": 13,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-29T10:00:00",
+   "id": 13,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-05-03T10:00:00",
+   "id": 14,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-01T10:00:00",
+   "id": 15,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-06T10:00:00",
+   "id": 16,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-18T10:00:00",
+   "id": 16,
+   "from": "Interview",
+   "to": "Rejected"
+  },
+  {
+   "ts": "2026-08-22T10:00:00",
+   "id": 17,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-25T10:00:00",
+   "id": 19,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-07-07T10:00:00",
+   "id": 19,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-06-16T10:00:00",
+   "id": 20,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-05-09T10:00:00",
+   "id": 22,
+   "from": "Applied",
+   "to": "Rejected"
+  },
+  {
+   "ts": "2026-06-27T10:00:00",
+   "id": 23,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-06-30T10:00:00",
+   "id": 23,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-07-03T10:00:00",
+   "id": 23,
+   "from": "Offer",
+   "to": "Declined"
+  },
+  {
+   "ts": "2026-09-18T10:00:00",
+   "id": 24,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-30T10:00:00",
+   "id": 24,
+   "from": "Interview",
+   "to": "Withdrawn"
+  },
+  {
+   "ts": "2026-09-02T10:00:00",
+   "id": 25,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-08-26T10:00:00",
+   "id": 27,
+   "from": "Applied",
+   "to": "Rejected"
+  },
+  {
+   "ts": "2026-06-27T10:00:00",
+   "id": 28,
+   "from": "Applied",
+   "to": "Rejected"
+  },
+  {
+   "ts": "2026-09-05T10:00:00",
+   "id": 29,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-09-11T10:00:00",
+   "id": 29,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-09-18T10:00:00",
+   "id": 29,
+   "from": "Offer",
+   "to": "Accepted"
+  },
+  {
+   "ts": "2026-07-18T10:00:00",
+   "id": 30,
+   "from": "Applied",
+   "to": "Interview"
+  },
+  {
+   "ts": "2026-07-21T10:00:00",
+   "id": 30,
+   "from": "Interview",
+   "to": "Offer"
+  },
+  {
+   "ts": "2026-07-25T10:00:00",
+   "id": 30,
+   "from": "Offer",
+   "to": "Accepted"
   }
  ],
  "settings": {

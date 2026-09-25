@@ -21,7 +21,9 @@
     .then((data) => {
       db = data;
       db.history = [];
-      db.transitions = [];
+      // Seeded stage history (if bundled) feeds the Insights sankey;
+      // in-session status changes keep appending to it.
+      db.transitions = data.transitions || [];
       nextId = Math.max(0, ...db.applications.map((a) => a.id)) + 1;
       for (const a of db.applications) {
         if (a.location && a.latitude !== '' && a.latitude != null) {
