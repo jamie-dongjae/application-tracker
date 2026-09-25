@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, HTTPException, Request
 
 from ..excel.store import NotFoundError
-from ..models import ApplicationIn, ApplicationPatch
+from ..models import ApplicationIn, ApplicationPatch, EventIn
 
 router = APIRouter()
 
@@ -87,6 +87,39 @@ def delete_application(request: Request, app_id: int):
     return {"deleted": app_id}
 
 
+@router.get("/applications/{app_id}/events")
+def list_events(request: Request, app_id: int):
+    try:
+        request.app.state.store.get_application(app_id)
+    except NotFoundError:
+        raise HTTPException(404, f"application {app_id} not found")
+    return {"events": request.app.state.store.list_events(app_id)}
+
+
+@router.post("/applications/{app_id}/events", status_code=201)
+def create_event(request: Request, app_id: int, body: EventIn):
+    try:
+        rec = request.app.state.store.add_event(app_id, body.model_dump())
+    except NotFoundError:
+        raise HTTPException(404, f"application {app_id} not found")
+    request.app.state.history.record(
+        "create", "event", rec["id"], None, rec,
+        label=f"Event: {rec['event']}")
+    return rec
+
+
+@router.delete("/events/{event_id}")
+def delete_event(request: Request, event_id: int):
+    try:
+        removed = request.app.state.store.delete_event(event_id)
+    except NotFoundError:
+        raise HTTPException(404, f"event {event_id} not found")
+    request.app.state.history.record(
+        "delete", "event", event_id, removed, None,
+        label=f"Deleted event: {removed['event']}")
+    return {"deleted": event_id}
+
+
 @router.post("/undo")
 def undo(request: Request):
     history = request.app.state.history
@@ -109,6 +142,12 @@ def undo(request: Request):
                 store.add_prep(entry["before"], force_id=entry["id"])
             else:
                 store.update_prep(entry["id"], entry["before"])
+        elif entry["entity"] == "event":
+            if entry["action"] == "create":
+                store.delete_event(entry["id"])
+            elif entry["action"] == "delete":
+                before = entry["before"]
+                store.add_event(before["app_id"], before, force_id=entry["id"])
     except NotFoundError:
         raise HTTPException(410, "the affected row no longer exists")
     except Exception:

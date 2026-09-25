@@ -5,9 +5,24 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 
 from .. import config
-from ..models import ImportRequest, SettingsPatch
+from ..models import EmployerIn, ImportRequest, SettingsPatch
 
 router = APIRouter()
+
+
+@router.get("/employers")
+def list_employers(request: Request):
+    return {"employers": request.app.state.store.list_employers()}
+
+
+@router.put("/employers")
+def put_employers(request: Request, body: list[EmployerIn]):
+    rows = [b.model_dump() for b in body]
+    count = request.app.state.store.replace_employers(rows)
+    request.app.state.history.record(
+        "update", "employers", "all", None, {"count": count},
+        label=f"Replaced employer rules ({count})", undoable=False)
+    return {"employers": request.app.state.store.list_employers()}
 
 
 @router.get("/health")
