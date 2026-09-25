@@ -1,6 +1,6 @@
 // Dashboard: weekly goal, KPIs, pipeline snapshot, next actions, activity.
 
-import { state, ACTIVE_STATUSES, BOARD_STATUSES, reachedOfferCount, STATUS_COLORS, daysSince, esc } from '../state.js';
+import { state, ACTIVE_STATUSES, BOARD_STATUSES, NON_PIPELINE_TRACKS, reachedOfferCount, STATUS_COLORS, daysSince, esc } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { countUp, motionOK } from '../components/motion.js';
 
@@ -18,9 +18,11 @@ export function renderDashboard(el) {
 
   const monday = startOfWeek();
   const thisWeek = apps.filter((a) => a.date_applied && new Date(String(a.date_applied).slice(0, 10)) >= monday).length;
-  const active = apps.filter((a) => ACTIVE_STATUSES.includes(a.status)).length;
-  const submitted = apps.filter((a) => a.status !== 'Wishlist').length;
-  const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status)).length;
+  // bridge/nurture tracks are deliberately outside the pipeline KPIs
+  const pipeline = apps.filter((a) => !NON_PIPELINE_TRACKS.includes(a.track));
+  const active = pipeline.filter((a) => ACTIVE_STATUSES.includes(a.status)).length;
+  const submitted = pipeline.filter((a) => a.status !== 'Wishlist').length;
+  const responded = pipeline.filter((a) => !['Wishlist', 'Applied'].includes(a.status)).length;
   const responseRate = submitted ? Math.round((responded / submitted) * 100) : 0;
   const offers = reachedOfferCount();
   const accepted = apps.filter((a) => a.status === 'Accepted').length;
@@ -28,13 +30,20 @@ export function renderDashboard(el) {
   const pct = Math.min(1, thisWeek / goal);
   const C = 2 * Math.PI * 26;
 
+  const today = new Date().toISOString().slice(0, 10);
+  const actions = apps
+    .filter((a) => a.next_action && !['Rejected', 'Withdrawn', 'Declined', 'Accepted'].includes(a.status))
+    .sort((x, y) => String(x.due || '9999').localeCompare(String(y.due || '9999')))
+    .slice(0, 8);
+  const actionIds = new Set(actions.map((a) => a.id));
   const stale = apps
-    .filter((a) => ['Applied', 'Interview'].includes(a.status))
+    .filter((a) => ['Applied', 'Interview'].includes(a.status) && !actionIds.has(a.id))
     .map((a) => ({ ...a, idle: daysSince(a.last_updated || a.date_applied) ?? 0 }))
-    .filter((a) => a.idle >= staleDays)
+    .filter((a) => a.idle >= staleDays && a.current_state !== 'stale')
     .sort((x, y) => y.idle - x.idle)
     .slice(0, 6);
-  const wishlist = apps.filter((a) => a.status === 'Wishlist').slice(0, 4);
+  const wishlist = apps.filter((a) => a.status === 'Wishlist' && !a.track?.includes('nurture')
+    && !(a.notes || '').startsWith('considered')).slice(0, 4);
 
   const snapshot = BOARD_STATUSES.map((s) => ({
     status: s,
@@ -95,6 +104,18 @@ export function renderDashboard(el) {
       <div class="panel">
         <h2 class="panel-title">Next actions</h2>
         <div class="row-list">
+          ${actions.map((a) => {
+            const overdue = a.due && String(a.due).slice(0, 10) < today;
+            return `
+            <div class="row-item" data-open="${a.id}">
+              <span class="dot" style="background:${overdue ? 'var(--s-rejected)' : STATUS_COLORS[a.status]}"></span>
+              <div class="row-main">
+                <div class="row-title">${esc(a.company)} — ${esc(a.title)}</div>
+                <div class="row-sub">${esc(a.next_action)}</div>
+              </div>
+              <span class="row-aside ${overdue ? 'stale' : ''}">${a.due ? esc(String(a.due).slice(5, 10)) + (overdue ? ' ⚠' : '') : ''}</span>
+            </div>`;
+          }).join('')}
           ${stale.map((a) => `
             <div class="row-item" data-open="${a.id}">
               <span class="dot" style="background:${STATUS_COLORS[a.status]}"></span>
@@ -112,7 +133,7 @@ export function renderDashboard(el) {
                 <div class="row-sub">Wishlist — ready to apply?</div>
               </div>
             </div>`).join('')}
-          ${!stale.length && !wishlist.length ? `<div class="empty">Nothing needs attention. Add your next application.</div>` : ''}
+          ${!actions.length && !stale.length && !wishlist.length ? `<div class="empty">Nothing needs attention. Add your next application.</div>` : ''}
         </div>
       </div>
     </div>

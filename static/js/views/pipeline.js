@@ -1,7 +1,8 @@
 // Pipeline kanban: Wishlist → Applied → Interview → Offer, with quick
 // advance/reject buttons on every card and a closed tray below.
 
-import { state, BOARD_STATUSES, CLOSED_STATUSES, NEXT_STATUS, STATUS_COLORS, patchApplication, undo, daysSince, esc } from '../state.js';
+import { state, BOARD_STATUSES, CLOSED_STATUSES, NEXT_STATUS, STATUS_COLORS, TRACKS,
+  TRACK_LABELS, STATE_LABELS, patchApplication, undo, daysSince, fmtDate, esc } from '../state.js';
 import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
@@ -27,15 +28,28 @@ async function changeStatus(id, to, cardEl) {
   }
 }
 
+// current_state values worth surfacing as a chip on the card.
+const FLAG_STATES = ['stale', 'on_hold_employer', 'action_required', 'scheduling'];
+
+function matchesBoardFilter(a) {
+  const f = state.boardFilter;
+  if (f.track && (a.track || 'career') !== f.track) return false;
+  if (f.current_state && a.current_state !== f.current_state) return false;
+  return true;
+}
+
 export function renderPipeline(el) {
   const staleDays = state.settings.stale_days || 14;
-  const closed = state.apps.filter((a) => CLOSED_STATUSES.includes(a.status));
+  const boardApps = state.apps.filter(matchesBoardFilter);
+  const closed = boardApps.filter((a) => CLOSED_STATUSES.includes(a.status));
+  const filterOn = !!(state.boardFilter.track || state.boardFilter.current_state);
 
   const card = (a) => {
     const idle = daysSince(a.last_updated || a.date_applied);
     const isStale = idle != null && idle >= staleDays && !CLOSED_STATUSES.includes(a.status) && a.status !== 'Wishlist';
     const next = NEXT_STATUS[a.status];
     const isClosed = CLOSED_STATUSES.includes(a.status);
+    const dueOver = a.due && String(a.due).slice(0, 10) < new Date().toISOString().slice(0, 10);
     const actions = isClosed
       ? `<button class="card-btn" data-act="revive" title="Back to Applied">↩ Revive</button>`
       : a.status === 'Offer'
@@ -51,6 +65,9 @@ export function renderPipeline(el) {
         <div class="card-title">${esc(a.title)}</div>
         <div class="card-meta">
           ${isClosed ? `<span><span class="dot" style="background:${STATUS_COLORS[a.status]}"></span> ${esc(a.status)}</span>` : ''}
+          ${a.track && a.track !== 'career' ? `<span class="badge badge-track" title="Track">${esc(TRACK_LABELS[a.track] || a.track)}</span>` : ''}
+          ${!isClosed && FLAG_STATES.includes(a.current_state) ? `<span class="badge badge-state s-${esc(a.current_state)}">${esc(STATE_LABELS[a.current_state])}</span>` : ''}
+          ${a.next_action && a.due && !isClosed ? `<span class="badge badge-due ${dueOver ? 'overdue' : ''}" title="${esc(a.next_action)}">⏰ ${esc(String(fmtDate(a.due)).slice(5))}</span>` : ''}
           ${a.location ? `<span>${esc(a.location)}</span>` : ''}
           ${a.sponsorship === 'Mentioned' ? `<span title="Sponsorship mentioned">visa✓</span>` : ''}
           <span class="spacer"></span>
@@ -60,10 +77,22 @@ export function renderPipeline(el) {
       </div>`;
   };
 
+  const filterChips = (key, values, labels) => values.map((v) => `
+    <button class="filter-chip ${state.boardFilter[key] === v ? 'on' : ''}" data-filter="${key}" data-value="${esc(v)}">
+      ${esc(labels[v] || v)}
+    </button>`).join('');
+
   el.innerHTML = `
+    <div class="board-filters">
+      <span class="faint">Track:</span>
+      ${filterChips('track', TRACKS, TRACK_LABELS)}
+      <span class="faint" style="margin-left:12px">State:</span>
+      ${filterChips('current_state', FLAG_STATES, STATE_LABELS)}
+      ${filterOn ? `<button class="filter-chip clear" data-filter-clear>✕ clear</button>` : ''}
+    </div>
     <div class="board">
       ${BOARD_STATUSES.map((status) => {
-        const rows = state.apps.filter((a) => a.status === status);
+        const rows = boardApps.filter((a) => a.status === status);
         return `
           <div class="col" data-status="${esc(status)}">
             <div class="col-head">
@@ -85,6 +114,20 @@ export function renderPipeline(el) {
         ${closed.map(card).join('') || `<div class="empty">Nothing closed yet.</div>`}
       </div>
     </details>`;
+
+  el.querySelectorAll('[data-filter]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const key = chip.dataset.filter;
+      const value = chip.dataset.value;
+      state.boardFilter[key] = state.boardFilter[key] === value ? '' : value;
+      renderPipeline(el);
+    });
+  });
+  const clearBtn = el.querySelector('[data-filter-clear]');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    state.boardFilter = { track: '', current_state: '' };
+    renderPipeline(el);
+  });
 
   el.querySelectorAll('.card').forEach((cardEl) => {
     const id = Number(cardEl.dataset.id);
