@@ -8,7 +8,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PORT = 8765
 
-SETTINGS_DEFAULTS = {"weekly_goal": 5, "stale_days": 14, "theme": "dark"}
+# last_sync is written by the sync importer only; SettingsPatch deliberately
+# omits it so the UI settings endpoint can't clobber the watermark.
+SETTINGS_DEFAULTS = {"weekly_goal": 5, "stale_days": 14, "theme": "dark", "last_sync": ""}
 
 
 def data_dir() -> Path:
@@ -31,6 +33,14 @@ def history_path() -> Path:
 
 def settings_path() -> Path:
     return data_dir() / "settings.json"
+
+
+def aliases_path() -> Path:
+    return data_dir() / "aliases.json"
+
+
+def sync_ledger_path() -> Path:
+    return data_dir() / "sync_ledger.json"
 
 
 def load_settings() -> dict:
