@@ -90,6 +90,7 @@ export const state = {
   apps: [],
   prep: [],
   employers: [],
+  reviewQueue: [],
   settings: { weekly_goal: 5, stale_days: 14 },
   history: [],
   transitions: [],
@@ -106,12 +107,13 @@ export function subscribe(fn) { listeners.add(fn); return () => listeners.delete
 export function emit(topic) { listeners.forEach((fn) => fn(topic)); }
 
 export async function loadAll() {
-  const [apps, prepData, settings, hist, employers] = await Promise.all([
+  const [apps, prepData, settings, hist, employers, review] = await Promise.all([
     api.get('/api/applications'),
     api.get('/api/prep'),
     api.get('/api/settings'),
     api.get('/api/history'),
     api.get('/api/employers'),
+    api.get('/api/sync/review'),
   ]);
   state.apps = apps.applications;
   state.prep = prepData.prep;
@@ -119,6 +121,7 @@ export async function loadAll() {
   state.history = hist.history;
   state.transitions = hist.transitions;
   state.employers = employers.employers;
+  state.reviewQueue = review.items;
   emit('data');
 }
 
@@ -132,6 +135,11 @@ export async function refreshApps() {
 
 export async function refreshPrep() {
   state.prep = (await api.get('/api/prep')).prep;
+  emit('data');
+}
+
+export async function refreshReview() {
+  state.reviewQueue = (await api.get('/api/sync/review')).items;
   emit('data');
 }
 

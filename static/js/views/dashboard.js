@@ -138,6 +138,29 @@ export function renderDashboard(el) {
       </div>
     </div>
 
+    ${state.reviewQueue.length ? `
+    <div class="panel" style="margin-top:14px">
+      <h2 class="panel-title">Mail review <span class="num">(${state.reviewQueue.length})</span></h2>
+      <div class="row-list">
+        ${state.reviewQueue.map((item) => {
+          const p = item.proposed || {};
+          const patchBits = Object.entries(p.patch || {}).map(([k, v]) => `${k} → ${v}`).join(', ');
+          const target = p.match && p.match.id
+            ? `${esc(p.company)} — ${esc(p.title)}` : `new record: ${esc(p.company || '?')}`;
+          return `
+          <div class="row-item" data-review="${esc(item.id)}" ${p.match && p.match.id ? `data-open-app="${p.match.id}"` : 'style="cursor:default"'}>
+            <span class="dot" style="background:var(--s-wishlist)"></span>
+            <div class="row-main">
+              <div class="row-title">${esc(item.email.subject || '(no subject)')}</div>
+              <div class="row-sub">${esc(item.email.from)} · ${esc(item.email.date || '')} · ${target}${patchBits ? ` · ${esc(patchBits)}` : ''}</div>
+            </div>
+            <button class="card-btn acc" data-review-apply="${esc(item.id)}">✓ Apply</button>
+            <button class="card-btn" data-review-dismiss="${esc(item.id)}">✕ Dismiss</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
     <div class="panel" style="margin-top:14px">
       <h2 class="panel-title">Recent activity</h2>
       <div class="row-list">
@@ -166,6 +189,31 @@ export function renderDashboard(el) {
 
   el.querySelectorAll('[data-open]').forEach((row) => {
     row.onclick = () => openDetail(Number(row.dataset.open));
+  });
+  el.querySelectorAll('[data-review]').forEach((row) => {
+    row.addEventListener('click', async (e) => {
+      const applyBtn = e.target.closest('[data-review-apply]');
+      const dismissBtn = e.target.closest('[data-review-dismiss]');
+      if (applyBtn || dismissBtn) {
+        e.stopPropagation();
+        const { applyReviewItem, dismissReviewItem } = await import('../components/mailsync.js');
+        const { toast } = await import('../components/toast.js');
+        try {
+          if (applyBtn) {
+            await applyReviewItem(applyBtn.dataset.reviewApply);
+            toast('Applied.');
+          } else {
+            await dismissReviewItem(dismissBtn.dataset.reviewDismiss);
+            toast('Dismissed.');
+          }
+        } catch (err) {
+          if (err.status !== 409) toast('Failed. ' + (err.message || ''), { error: true });
+        }
+        renderDashboard(el);
+        return;
+      }
+      if (row.dataset.openApp) openDetail(Number(row.dataset.openApp));
+    });
   });
   el.querySelector('#edit-goal').onclick = async () => {
     const input = prompt('Weekly application goal:', String(goal));

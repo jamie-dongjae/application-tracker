@@ -2,6 +2,7 @@
 
 import { loadAll, subscribe, state, undo } from './state.js';
 import { openAddFlow, isOpen as isModalOpen } from './components/addflow.js';
+import { wireSyncButton } from './components/mailsync.js';
 import { openPalette, isPaletteOpen } from './components/palette.js';
 import { isDetailOpen, closeDetail } from './components/detail.js';
 import { isSoundOn, toggleSound } from './components/fx.js';
@@ -83,6 +84,7 @@ paintMusicBtn();
 
 document.getElementById('new-btn').onclick = () => openAddFlow();
 document.getElementById('palette-btn').onclick = () => openPalette();
+wireSyncButton();
 
 window.addEventListener('hashchange', renderCurrent);
 
