@@ -39,6 +39,14 @@ def aliases_path() -> Path:
     return data_dir() / "aliases.json"
 
 
+def gmail_credentials_path() -> Path:
+    return data_dir() / "gmail_credentials.json"
+
+
+def review_queue_path() -> Path:
+    return data_dir() / "review_queue.json"
+
+
 def sync_ledger_path() -> Path:
     return data_dir() / "sync_ledger.json"
 

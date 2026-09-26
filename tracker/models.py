@@ -154,6 +154,12 @@ class SyncImportRequest(BaseModel):
     dry_run: bool = True
 
 
+class MailCredentialsIn(BaseModel):
+    # plain str + pattern rather than EmailStr: avoids the email-validator dep
+    email: str = Field(min_length=3, pattern=r".+@.+")
+    app_password: str = Field(min_length=8)
+
+
 class PrefillRequest(BaseModel):
     url: str = Field(min_length=4)
 
