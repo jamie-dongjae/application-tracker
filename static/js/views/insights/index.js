@@ -15,56 +15,39 @@ let observer = null;
 let rafId = 0;
 const pendingResize = new Set();
 let rootEl = null;
-let webglOK = null;
-let terrainBroken = false;
-
-function hasWebGL() {
-  if (webglOK !== null) return webglOK;
-  try {
-    const canvas = document.createElement('canvas');
-    webglOK = !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
-  } catch {
-    webglOK = false;
-  }
-  return webglOK;
-}
-
-// The production echarts build silently DROPS unregistered series types, so
-// a missing echarts-gl never throws — detect its UMD global explicitly.
-function hasGL() {
-  return typeof window['echarts-gl'] !== 'undefined';
-}
 
 const SKELETON = `
   <div class="page-head">
     <h1 class="page-title">Insights</h1>
     <span class="page-sub">computed from your workbook — nothing is estimated</span>
   </div>
-  <div class="grid-kpi" style="grid-template-columns:repeat(5,1fr)" id="ins-kpis"></div>
+  <div class="grid-kpi" style="grid-template-columns:repeat(6,1fr)" id="ins-kpis"></div>
   <div class="insights-grid">
-    <div class="panel span-7"><h2 class="panel-title">Pipeline flow — where applications travel</h2>
-      <div class="chart-box tall" data-chart="sankey"></div></div>
+    <div class="panel span-7"><h2 class="panel-title">Source effectiveness — where screens come from</h2>
+      <div class="chart-box tall" data-chart="sources"></div></div>
     <div class="panel span-5"><h2 class="panel-title">Response rate</h2>
       <div class="chart-box tall" data-chart="gauge"></div></div>
-    <div class="panel span-12"><h2 class="panel-title">Application terrain — weekly volume by current status</h2>
-      <div class="chart-box terrain" data-chart="terrain"></div></div>
+    <div class="panel span-12"><h2 class="panel-title">Weekly cohorts — applications vs screen rate</h2>
+      <div class="chart-box" data-chart="cohorts"></div></div>
     <div class="panel span-7"><h2 class="panel-title">Momentum — weekly applications by source</h2>
       <div class="chart-box" data-chart="momentum"></div></div>
-    <div class="panel span-5"><h2 class="panel-title">Sources</h2>
+    <div class="panel span-5"><h2 class="panel-title">Sources — volume</h2>
       <div class="chart-box" data-chart="rose"></div></div>
-    <div class="panel span-8"><h2 class="panel-title">Daily activity — last 6 months</h2>
-      <div class="chart-box short" data-chart="calendar"></div></div>
-    <div class="panel span-4"><h2 class="panel-title">Work type</h2>
-      <div class="chart-box short" data-chart="worktype"></div></div>
     <div class="panel span-5"><h2 class="panel-title">Funnel — furthest stage reached</h2>
       <div class="chart-box" data-chart="funnel"></div></div>
     <div class="panel span-7"><h2 class="panel-title">Closed outcomes — how applications end</h2>
       <div class="chart-box" data-chart="outcomes"></div></div>
-    <div class="panel span-6"><h2 class="panel-title">Gates — known blockers on postings</h2>
+    <div class="panel span-5"><h2 class="panel-title">Rejection speed <span class="faint" id="ins-speed-n"></span></h2>
+      <div class="chart-box" data-chart="speed"></div></div>
+    <div class="panel span-7"><h2 class="panel-title">Gates — known blockers on postings</h2>
       <div class="chart-box" data-chart="gates"></div></div>
+    <div class="panel span-8"><h2 class="panel-title">Daily activity — last 6 months</h2>
+      <div class="chart-box short" data-chart="calendar"></div></div>
+    <div class="panel span-4"><h2 class="panel-title">Work type</h2>
+      <div class="chart-box short" data-chart="worktype"></div></div>
     <div class="panel span-6"><h2 class="panel-title">Next actions — due list</h2>
       <div class="row-list" id="ins-next-actions"></div></div>
-    <div class="panel span-12 ins-employers"><h2 class="panel-title">Employer rules</h2>
+    <div class="panel span-6 ins-employers"><h2 class="panel-title">Employer rules</h2>
       <div id="ins-employers"></div></div>
   </div>`;
 
@@ -112,10 +95,11 @@ function initCharts(el) {
 function applyData() {
   const t = chartTokens();
   const kpis = derive.kpis();
-  const terrain = derive.terrainMatrix();
+  const speed = derive.rejectionSpeed();
   const options = {
-    sankey: charts.sankeyOption(derive.sankeyData(), t),
+    sources: charts.sourceBarOption(derive.sourceEffectiveness(), t),
     gauge: charts.gaugeOption(kpis.responseRate, t),
+    cohorts: charts.cohortComboOption(derive.weeklyCohorts(), t),
     momentum: charts.momentumOption(derive.momentumWeeks(), t),
     rose: charts.roseOption(derive.sourceRose(), t),
     calendar: charts.calendarOption(derive.calendarData(), t),
@@ -123,30 +107,15 @@ function applyData() {
     funnel: charts.funnelOption(derive.stageFunnel(), t),
     outcomes: charts.outcomeBarOption(derive.outcomeBreakdown(), t),
     gates: charts.gatesBarOption(derive.gatesData(), t),
-    terrain: (!terrainBroken && hasWebGL() && hasGL())
-      ? charts.terrainOption(terrain, t)
-      : charts.terrainFallbackOption(terrain, t),
+    speed: charts.speedHistOption(speed, t),
   };
+  const speedN = rootEl && rootEl.querySelector('#ins-speed-n');
+  if (speedN) speedN.textContent = `— days to rejection (n=${speed.known} where known)`;
   for (const [name, chart] of registry) {
     try {
       chart.setOption(options[name], true);
     } catch (err) {
-      if (name === 'terrain' && !terrainBroken) {
-        // WebGL init failed mid-setOption: fall back to a 2D heatmap of the
-        // same matrix, permanently for this session. A throw can leave the
-        // instance's main-process flag stuck (every later call silently
-        // no-ops), so start from a fresh instance rather than reusing it.
-        terrainBroken = true;
-        chart.dispose();
-        const box = rootEl && rootEl.querySelector('[data-chart="terrain"]');
-        if (box) {
-          const fresh = echarts.init(box);
-          registry.set('terrain', fresh);
-          fresh.setOption(charts.terrainFallbackOption(terrain, t), true);
-        }
-      } else {
-        console.error(`insights: ${name} failed to render`, err);
-      }
+      console.error(`insights: ${name} failed to render`, err);
     }
   }
 }
@@ -163,6 +132,8 @@ function paintKpis(el) {
     kpi('Submitted', String(k.submitted)) +
     kpi('Response rate', `${k.responseRate}<span class="faint" style="font-size:15px">%</span>`,
       `${k.responded} of ${k.submitted}`) +
+    kpi('Screen rate', `${k.screenRate}<span class="faint" style="font-size:15px">%</span>`,
+      `${k.screened} reached a human`) +
     kpi('Reached offer', String(k.reachedOffer)) +
     kpi('Accepted', k.accepted
       ? `<span style="color:var(--s-accepted)">${k.accepted}</span>` : '0',

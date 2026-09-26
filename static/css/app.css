@@ -587,7 +587,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .chart-box { width: 100%; height: 300px; }
 .chart-box.tall { height: 340px; }
 .chart-box.short { height: 220px; }
-.chart-box.terrain { height: 400px; }
 
 @media (max-width: 980px) {
   .insights-grid > .panel { grid-column: span 12; }

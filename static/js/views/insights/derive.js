@@ -1,7 +1,7 @@
 // Pure data selectors for the Insights dashboard: everything is computed
 // from state and returned as plain data — no DOM, no echarts in here.
 
-import { state, STATUSES, STAGES, STAGE_LABELS, OUTCOME_LABELS, NON_PIPELINE_TRACKS,
+import { state, STAGES, STAGE_LABELS, OUTCOME_LABELS, NON_PIPELINE_TRACKS,
   reachedOfferCount, splitGates } from '../../state.js';
 
 // bridge/nurture tracks never count toward pipeline KPIs or funnels.
@@ -13,91 +13,31 @@ export function excludedCount() {
   return state.apps.filter((a) => NON_PIPELINE_TRACKS.includes(a.track)).length;
 }
 
-const STAGE_IDX = {
-  'Applied': 1, 'Interview': 2, 'Offer': 3, 'Accepted': 3, 'Declined': 3,
-  // pre-simplification stage names in old history entries
-  'Phone Screen': 2, 'Technical': 2, 'Onsite': 2,
-};
-const STAGE_NAME = { 1: 'Applied', 2: 'Interview', 3: 'Offer' };
+// "Screened" = a real human response: the funnel reached recruiter_screen or
+// further. ATS confirmations (stage `confirmed`) are auto-replies, not signal.
+const SCREEN_FLOOR = STAGES.indexOf('recruiter_screen');
+const STAGE_ORDER = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 
-function transitionsById() {
-  const map = new Map();
-  for (const t of state.transitions) {
-    if (!map.has(t.id)) map.set(t.id, []);
-    map.get(t.id).push(t);
-  }
-  return map;
-}
-
-// History-aware: an app that reached Interview before being rejected still
-// counts as having reached Interview. Imported rows without history fall
-// back to their current status (submitted at minimum).
-function furthestStage(app, tmap) {
-  let idx = STAGE_IDX[app.status] || 0;
-  for (const t of tmap.get(app.id) || []) {
-    idx = Math.max(idx, STAGE_IDX[t.to] || 0, STAGE_IDX[t.from] || 0);
-  }
-  if (!idx && app.status !== 'Wishlist') idx = 1;
-  return idx;
+export function isScreened(app) {
+  return (STAGE_ORDER[app.stage_reached] ?? -1) >= SCREEN_FLOOR;
 }
 
 export function kpis() {
   const apps = pipelineApps();
   const submitted = apps.filter((a) => a.status !== 'Wishlist');
   const responded = apps.filter((a) => !['Wishlist', 'Applied'].includes(a.status));
+  const screened = submitted.filter(isScreened);
   return {
     tracked: state.apps.length,
     excluded: excludedCount(),
     submitted: submitted.length,
     responded: responded.length,
     responseRate: submitted.length ? Math.round((responded.length / submitted.length) * 100) : 0,
+    screened: screened.length,
+    screenRate: submitted.length ? Math.round((screened.length / submitted.length) * 100) : 0,
     reachedOffer: reachedOfferCount(),
     accepted: apps.filter((a) => a.status === 'Accepted').length,
   };
-}
-
-// Sankey flows via a "monotonic hull": Revive creates backward transitions
-// (Rejected → Applied) and echarts sankeys reject cycles, so instead of
-// chaining raw transitions we emit the furthest forward path per app plus
-// one terminal link for its current closed status.
-export function sankeyData() {
-  const tmap = transitionsById();
-  const links = new Map();
-  const addLink = (from, to) => {
-    const key = `${from} ${to}`;
-    links.set(key, (links.get(key) || 0) + 1);
-  };
-
-  let sawWishlistOrigin = false;
-  for (const app of pipelineApps()) {
-    if (app.status === 'Wishlist') continue; // shown in the KPI row instead
-    const furthest = furthestStage(app, tmap);
-    const fromWishlist = (tmap.get(app.id) || []).some((t) => t.from === 'Wishlist');
-    if (fromWishlist) { addLink('Wishlist', 'Applied'); sawWishlistOrigin = true; }
-    if (furthest >= 2) addLink('Applied', 'Interview');
-    if (furthest >= 3) addLink('Interview', 'Offer');
-    if (app.status === 'Accepted') addLink('Offer', 'Accepted');
-    else if (app.status === 'Declined') addLink('Offer', 'Declined');
-    else if (app.status === 'Rejected' || app.status === 'Withdrawn') {
-      addLink(STAGE_NAME[furthest], app.status);
-    }
-    // Active apps (Applied/Interview/Offer) emit no terminal link: node
-    // inflow > outflow reads as "still in play".
-  }
-
-  const names = new Set();
-  const linkArr = [...links.entries()].map(([key, value]) => {
-    const [source, target] = key.split(' ');
-    names.add(source); names.add(target);
-    return { source, target, value };
-  });
-  const depthOf = (name) => {
-    const stage = { 'Wishlist': 0, 'Applied': 1, 'Interview': 2, 'Offer': 3 }[name];
-    if (stage !== undefined) return sawWishlistOrigin ? stage : stage - 1;
-    return sawWishlistOrigin ? 4 : 3; // terminal outcomes share the last column
-  };
-  const nodes = STATUSES.filter((s) => names.has(s)).map((name) => ({ name, depth: depthOf(name) }));
-  return { nodes, links: linkArr };
 }
 
 function localDateStr(d) {
@@ -227,30 +167,70 @@ export function momentumWeeks(topN = 4) {
   return { weeks, stacks, goal: state.settings.weekly_goal || 5 };
 }
 
-// 3D terrain: applications submitted in week x whose *current* status is y.
-export function terrainMatrix() {
+// ---- Insights v3 selectors ----
+
+// Where should I apply: per canonical source, volume vs real-response rate.
+export function sourceEffectiveness() {
+  const submitted = pipelineApps().filter((a) => a.status !== 'Wishlist');
+  const by = new Map();
+  for (const a of submitted) {
+    const key = a.source || 'Unknown';
+    if (!by.has(key)) by.set(key, { source: key, submitted: 0, screened: 0 });
+    const row = by.get(key);
+    row.submitted += 1;
+    if (isScreened(a)) row.screened += 1;
+  }
+  return [...by.values()]
+    .map((r) => ({ ...r, screenRate: r.submitted ? Math.round((r.screened / r.submitted) * 100) : 0 }))
+    .sort((x, y) => x.submitted - y.submitted); // horizontal bar: biggest on top
+}
+
+// Weekly cohorts: is the CV/strategy improving over time? Apps grouped by the
+// week they were APPLIED, with the share of that cohort that reached a screen.
+export function weeklyCohorts(weeksBack = 12) {
   const thisMonday = mondayOf(new Date());
-  const statuses = STATUSES.filter((s) => s !== 'Wishlist');
-  const labels = [];
-  const starts = [];
-  for (let i = 11; i >= 0; i--) {
+  const submitted = pipelineApps().filter((a) => a.date_applied && a.status !== 'Wishlist');
+  const weeks = [];
+  for (let i = weeksBack - 1; i >= 0; i--) {
     const start = new Date(thisMonday); start.setDate(start.getDate() - i * 7);
-    starts.push(start);
-    labels.push(`${start.getMonth() + 1}/${start.getDate()}`);
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    const cohort = submitted.filter((a) => {
+      const d = new Date(String(a.date_applied).slice(0, 10));
+      return d >= start && d < end;
+    });
+    const screened = cohort.filter(isScreened).length;
+    weeks.push({
+      label: `${start.getMonth() + 1}/${start.getDate()}`,
+      applied: cohort.length,
+      screened,
+      screenRate: cohort.length ? Math.round((screened / cohort.length) * 100) : null,
+    });
   }
-  const data = [];
-  let max = 1;
-  for (let wi = 0; wi < starts.length; wi++) {
-    const end = new Date(starts[wi]); end.setDate(end.getDate() + 7);
-    for (let si = 0; si < statuses.length; si++) {
-      const n = state.apps.filter((a) => {
-        if (!a.date_applied || a.status !== statuses[si]) return false;
-        const d = new Date(String(a.date_applied).slice(0, 10));
-        return d >= starts[wi] && d < end;
-      }).length;
-      if (n > max) max = n;
-      data.push([wi, si, n]);
-    }
+  return weeks;
+}
+
+const _CLOSED_NOTE = /closed (\d{4}-\d{2}-\d{2})/;
+
+// How fast do rejections come? Days from applied to close, where the close
+// date is recorded (backfill notes; mail sync events grow this over time).
+export function rejectionSpeed() {
+  const buckets = [
+    { label: '0–1d', min: 0, max: 1, n: 0 },   // same-batch ATS cut
+    { label: '2–7d', min: 2, max: 7, n: 0 },
+    { label: '1–2w', min: 8, max: 14, n: 0 },
+    { label: '2–4w', min: 15, max: 30, n: 0 },
+    { label: '1mo+', min: 31, max: Infinity, n: 0 },
+  ];
+  let known = 0;
+  for (const a of pipelineApps()) {
+    if (a.current_state !== 'closed' || !String(a.outcome || '').startsWith('rejected')) continue;
+    const m = _CLOSED_NOTE.exec(a.notes || '');
+    if (!m || !a.date_applied) continue;
+    const days = Math.round((new Date(m[1]) - new Date(String(a.date_applied).slice(0, 10))) / 86400000);
+    if (Number.isNaN(days) || days < 0) continue;
+    known += 1;
+    const bucket = buckets.find((b) => days >= b.min && days <= b.max);
+    if (bucket) bucket.n += 1;
   }
-  return { labels, statuses, data, max };
+  return { buckets, known };
 }

@@ -7,24 +7,121 @@ function merge(t, option) {
   return Object.assign(baseOption(t), option);
 }
 
-export function sankeyOption(data, t) {
+// Where should I apply: per-source volume with the screened share overlaid.
+export function sourceBarOption(data, t) {
   return merge(t, {
-    tooltip: Object.assign(baseOption(t).tooltip, { trigger: 'item', triggerOn: 'mousemove' }),
+    tooltip: Object.assign(baseOption(t).tooltip, {
+      trigger: 'axis', axisPointer: { type: 'shadow' },
+      formatter: (ps) => {
+        const row = data[ps[0].dataIndex];
+        return `${row.source}<br>${row.submitted} submitted · <b>${row.screened}</b> screened (${row.screenRate}%)`;
+      },
+    }),
+    legend: {
+      top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8,
+      textStyle: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
+    },
+    grid: { left: 8, right: 44, top: 26, bottom: 4, containLabel: true },
+    xAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: t.lineSoft } },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+    },
+    yAxis: {
+      type: 'category', data: data.map((d) => d.source),
+      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
+      axisLabel: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
+    },
+    series: [
+      {
+        name: 'submitted', type: 'bar', barGap: '-100%', barMaxWidth: 16, z: 1,
+        itemStyle: { color: t.lineSoft, borderRadius: [0, 4, 4, 0] },
+        data: data.map((d) => d.submitted),
+        label: {
+          show: true, position: 'right', color: t.textDim,
+          fontSize: 10, fontFamily: t.fontMono,
+          formatter: (p) => `${data[p.dataIndex].screenRate}%`,
+        },
+      },
+      {
+        name: 'screened', type: 'bar', barMaxWidth: 16, z: 2,
+        itemStyle: { color: t.accent, borderRadius: [0, 4, 4, 0], opacity: 0.9 },
+        data: data.map((d) => d.screened),
+      },
+    ],
+  });
+}
+
+// Weekly cohorts: bars = applications, line = % of that cohort screened.
+export function cohortComboOption(weeks, t) {
+  return merge(t, {
+    tooltip: Object.assign(baseOption(t).tooltip, {
+      trigger: 'axis',
+      formatter: (ps) => {
+        const w = weeks[ps[0].dataIndex];
+        return `wk ${w.label}: ${w.applied} applied · ${w.screened} screened` +
+          (w.screenRate != null ? ` (<b>${w.screenRate}%</b>)` : '');
+      },
+    }),
+    legend: {
+      top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8,
+      textStyle: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
+    },
+    grid: { left: 8, right: 14, top: 30, bottom: 4, containLabel: true },
+    xAxis: {
+      type: 'category', data: weeks.map((w) => w.label),
+      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+    },
+    yAxis: [
+      {
+        type: 'value', minInterval: 1, name: '',
+        splitLine: { lineStyle: { color: t.lineSoft } },
+        axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+      },
+      {
+        type: 'value', min: 0, max: 100,
+        splitLine: { show: false },
+        axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono, formatter: '{value}%' },
+      },
+    ],
+    series: [
+      {
+        name: 'applied', type: 'bar', barMaxWidth: 18,
+        itemStyle: { color: t.lineSoft, borderRadius: [4, 4, 0, 0] },
+        data: weeks.map((w) => w.applied),
+      },
+      {
+        name: 'screen rate', type: 'line', yAxisIndex: 1, smooth: true,
+        symbol: 'circle', symbolSize: 5, connectNulls: true,
+        lineStyle: { width: 2, color: t.accent },
+        itemStyle: { color: t.accent },
+        data: weeks.map((w) => w.screenRate),
+      },
+    ],
+  });
+}
+
+// Rejection speed histogram: same-batch ATS cuts vs slow human reviews.
+export function speedHistOption(data, t) {
+  return merge(t, {
+    tooltip: Object.assign(baseOption(t).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' } }),
+    grid: { left: 8, right: 14, top: 26, bottom: 4, containLabel: true },
+    xAxis: {
+      type: 'category', data: data.buckets.map((b) => b.label),
+      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
+      axisLabel: { color: t.textDim, fontSize: 10, fontFamily: t.fontMono },
+    },
+    yAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: t.lineSoft } },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+    },
     series: [{
-      type: 'sankey',
-      layoutIterations: 0, // depths are precomputed; keep columns stable
-      nodeWidth: 14,
-      nodeGap: 16,
-      top: 10, bottom: 14, left: 4, right: 90,
-      emphasis: { focus: 'adjacency' },
-      data: data.nodes.map((n) => ({
-        name: n.name,
-        depth: n.depth,
-        itemStyle: { color: t.status[n.name] || t.accent, borderColor: 'transparent' },
-      })),
-      links: data.links,
-      lineStyle: { color: 'gradient', opacity: 0.32, curveness: 0.55 },
-      label: { color: t.text, fontFamily: t.fontUI, fontSize: 11.5 },
+      type: 'bar', barMaxWidth: 28,
+      itemStyle: { color: t.status.Rejected, borderRadius: [4, 4, 0, 0], opacity: 0.85 },
+      label: { show: true, position: 'top', color: t.textDim, fontSize: 10, fontFamily: t.fontMono },
+      data: data.buckets.map((b) => b.n),
     }],
   });
 }
@@ -158,54 +255,6 @@ export function gaugeOption(pct, t) {
   });
 }
 
-// The centerpiece: a slowly rotating 3D bar terrain (echarts-gl).
-export function terrainOption(m, t) {
-  return merge(t, {
-    visualMap: {
-      show: false, dimension: 1,
-      pieces: m.statuses.map((s, i) => ({ value: i, color: t.status[s] })),
-    },
-    xAxis3D: {
-      type: 'category', data: m.labels, name: '',
-      axisLabel: { color: t.textFaint, fontSize: 9, fontFamily: t.fontMono },
-      axisLine: { lineStyle: { color: t.line } },
-      splitLine: { show: false },
-    },
-    yAxis3D: {
-      type: 'category', data: m.statuses, name: '',
-      axisLabel: { color: t.textFaint, fontSize: 9, fontFamily: t.fontUI },
-      axisLine: { lineStyle: { color: t.line } },
-      splitLine: { show: false },
-    },
-    zAxis3D: {
-      type: 'value', name: '', minInterval: 1,
-      axisLabel: { color: t.textFaint, fontSize: 9, fontFamily: t.fontMono },
-      axisLine: { lineStyle: { color: t.line } },
-      splitLine: { lineStyle: { color: t.lineSoft, opacity: 0.4 } },
-    },
-    grid3D: {
-      boxWidth: 150, boxDepth: 62, boxHeight: 46,
-      // echarts-gl paints "transparent" as opaque black; use the panel token
-      // so the scene blends into the glass card in both themes.
-      environment: t.panel,
-      light: { main: { intensity: 1.25, shadow: false, beta: 35 }, ambient: { intensity: 0.32 } },
-      viewControl: {
-        autoRotate: motionAllowed(), autoRotateSpeed: 5, autoRotateAfterStill: 4,
-        distance: 210, alpha: 24, beta: 20, panSensitivity: 0, zoomSensitivity: 0.6,
-      },
-    },
-    series: [{
-      type: 'bar3D',
-      shading: 'lambert',
-      barSize: 4.4,
-      bevelSize: 0.35, bevelSmoothness: 4,
-      itemStyle: { opacity: 0.96 },
-      emphasis: { itemStyle: { color: t.accent }, label: { show: false } },
-      data: m.data,
-    }],
-  });
-}
-
 // Horizontal bar: closed applications by outcome bucket.
 export function outcomeBarOption(data, t) {
   return merge(t, {
@@ -283,31 +332,5 @@ export function gatesBarOption(data, t) {
         data: data.map((d) => d.closed),
       },
     ],
-  });
-}
-
-// 2D stand-in for the terrain when WebGL / echarts-gl is unavailable.
-export function terrainFallbackOption(m, t) {
-  return merge(t, {
-    tooltip: Object.assign(baseOption(t).tooltip, {
-      formatter: (p) => `${m.labels[p.value[0]]} · ${m.statuses[p.value[1]]}: <b>${p.value[2]}</b>`,
-    }),
-    visualMap: { show: false, min: 0, max: m.max, inRange: { color: [t.lineSoft, t.accent] } },
-    grid: { left: 8, right: 14, top: 12, bottom: 4, containLabel: true },
-    xAxis: {
-      type: 'category', data: m.labels,
-      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
-      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
-    },
-    yAxis: {
-      type: 'category', data: m.statuses,
-      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontUI },
-      axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
-    },
-    series: [{
-      type: 'heatmap',
-      data: m.data,
-      itemStyle: { borderColor: t.panel, borderWidth: 2, borderRadius: 3 },
-    }],
   });
 }
