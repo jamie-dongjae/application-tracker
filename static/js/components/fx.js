@@ -84,8 +84,15 @@ export function pulse(el, kind) {
   setTimeout(() => el.classList.remove(cls), 1300);
 }
 
-export function confetti(originEl, { count = 28, colors = ['#4dd6ff', '#46c98d', '#e8eef9', '#d9a441'] } = {}) {
+// Read palettes from the live theme so celebration colors follow dark/light.
+function themeColors(...vars) {
+  const css = getComputedStyle(document.documentElement);
+  return vars.map((v) => css.getPropertyValue(v).trim()).filter(Boolean);
+}
+
+export function confetti(originEl, { count = 28, colors } = {}) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  colors = colors || themeColors('--accent', '--ok', '--text', '--s-applied');
   const rect = originEl ? originEl.getBoundingClientRect()
     : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
   const cx = rect.left + rect.width / 2;
@@ -143,7 +150,7 @@ function screenFlash(kind) {
 export function statusFx(el, toStatus) {
   if (toStatus === 'Accepted') {
     pulse(el, 'accept');
-    confetti(el, { count: 84, colors: ['#ffd166', '#ffe9a8', '#3ecf95', '#ffffff'] });
+    confetti(el, { count: 84, colors: themeColors('--s-accepted', '--s-offer', '--accent', '--text') });
     screenFlash('accept');
     playAccepted();
   }

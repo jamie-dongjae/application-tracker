@@ -7,11 +7,18 @@ import { openDetail } from '../components/detail.js';
 import { toast } from '../components/toast.js';
 import { statusFx } from '../components/fx.js';
 
-const STATUS_HEX = {
-  'Wishlist': '#94a2c4', 'Applied': '#e5aa3f', 'Interview': '#5fb2f2',
-  'Offer': '#3ecf95', 'Accepted': '#ffd166', 'Declined': '#b48ee0',
-  'Rejected': '#f0647d', 'Withdrawn': '#66759b',
-};
+// Status colors come from the CSS tokens so a palette change propagates here.
+// Read once at module init — the map itself is theme-invariant (space view).
+const STATUS_HEX = (() => {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  return {
+    'Wishlist': v('--s-wishlist', '#94a2c4'), 'Applied': v('--s-applied', '#e5aa3f'),
+    'Interview': v('--s-screen', '#5fb2f2'), 'Offer': v('--s-offer', '#3ecf95'),
+    'Accepted': v('--s-accepted', '#ffd166'), 'Declined': v('--s-declined', '#b48ee0'),
+    'Rejected': v('--s-rejected', '#f0647d'), 'Withdrawn': v('--s-withdrawn', '#66759b'),
+  };
+})();
 
 // Hyperreal space view: satellite imagery on a 3D-terrain globe with
 // atmosphere. Every tile service is keyless and free with attribution —
@@ -347,7 +354,11 @@ async function runBackfill() {
 
 document.addEventListener('apptracker:backfill', runBackfill);
 
-const PING_HEX = { 'Offer': '#3ecf95', 'Accepted': '#ffd166', 'Declined': '#b48ee0', 'Rejected': '#f0647d', 'Withdrawn': '#f0647d' };
+const PING_HEX = {
+  'Offer': STATUS_HEX.Offer, 'Accepted': STATUS_HEX.Accepted,
+  'Declined': STATUS_HEX.Declined, 'Rejected': STATUS_HEX.Rejected,
+  'Withdrawn': STATUS_HEX.Rejected,
+};
 
 function mapPing(lnglat, color) {
   if (!map) return;
