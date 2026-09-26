@@ -91,14 +91,23 @@ export function cohortComboOption(weeks, t) {
     series: [
       {
         name: 'applied', type: 'bar', barMaxWidth: 18,
-        itemStyle: { color: t.lineSoft, borderRadius: [4, 4, 0, 0] },
+        itemStyle: {
+          // Aurora violet, fading toward the glass — clearly visible volume
+          // bars that still sit behind the cyan rate line.
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: t.accentAlt + 'cc' },
+                         { offset: 1, color: t.accentAlt + '2e' }],
+          },
+          borderRadius: [4, 4, 0, 0],
+        },
         data: weeks.map((w) => w.applied),
       },
       {
         name: 'screen rate', type: 'line', yAxisIndex: 1, smooth: true,
-        symbol: 'circle', symbolSize: 5, connectNulls: true,
-        lineStyle: { width: 2, color: t.accent },
-        itemStyle: { color: t.accent },
+        symbol: 'circle', symbolSize: 6, connectNulls: true,
+        lineStyle: { width: 2.5, color: t.accent, shadowColor: t.accent + '66', shadowBlur: 8 },
+        itemStyle: { color: t.accent, borderColor: t.panel, borderWidth: 1.5 },
         data: weeks.map((w) => w.screenRate),
       },
     ],

@@ -11,6 +11,7 @@ export function chartTokens() {
     line: v('--line'),
     lineSoft: v('--line-soft'),
     accent: v('--accent'),
+    accentAlt: v('--accent-alt'),
     panel: v('--panel'),
     fontUI: v('--font-ui'),
     fontMono: v('--font-mono'),
