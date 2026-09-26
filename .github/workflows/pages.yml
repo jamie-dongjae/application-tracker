@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Assemble static demo
         run: |
+          python scripts/build_demo.py   # demo/index.html is generated from static/index.html
           mkdir -p _site
           cp -r static _site/static
           cp demo/index.html _site/index.html

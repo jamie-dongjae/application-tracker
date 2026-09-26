@@ -107,21 +107,32 @@ export function subscribe(fn) { listeners.add(fn); return () => listeners.delete
 export function emit(topic) { listeners.forEach((fn) => fn(topic)); }
 
 export async function loadAll() {
-  const [apps, prepData, settings, hist, employers, review] = await Promise.all([
+  // Two tiers: applications + settings are the app; everything else degrades
+  // to an empty default so a partial backend (older server, static demo)
+  // can never blank the whole UI over one missing endpoint.
+  const [apps, settings] = await Promise.all([
     api.get('/api/applications'),
-    api.get('/api/prep'),
     api.get('/api/settings'),
+  ]);
+  const optional = await Promise.allSettled([
+    api.get('/api/prep'),
     api.get('/api/history'),
     api.get('/api/employers'),
     api.get('/api/sync/review'),
   ]);
+  const value = (i, fallback) => {
+    if (optional[i].status === 'fulfilled') return optional[i].value;
+    console.warn('loadAll: optional fetch failed', optional[i].reason);
+    return fallback;
+  };
   state.apps = apps.applications;
-  state.prep = prepData.prep;
   state.settings = { ...state.settings, ...settings };
+  state.prep = value(0, { prep: [] }).prep;
+  const hist = value(1, { history: [], transitions: [] });
   state.history = hist.history;
   state.transitions = hist.transitions;
-  state.employers = employers.employers;
-  state.reviewQueue = review.items;
+  state.employers = value(2, { employers: [] }).employers;
+  state.reviewQueue = value(3, { items: [] }).items;
   emit('data');
 }
 
