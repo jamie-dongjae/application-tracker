@@ -96,24 +96,27 @@ function applyData() {
   const t = chartTokens();
   const kpis = derive.kpis();
   const speed = derive.rejectionSpeed();
+  // Builders are thunks and each chart renders inside its own try/catch:
+  // one failing builder (e.g. a half-cached module mix after an update)
+  // must never blank the whole dashboard.
   const options = {
-    sources: charts.sourceBarOption(derive.sourceEffectiveness(), t),
-    gauge: charts.gaugeOption(kpis.responseRate, t),
-    cohorts: charts.cohortComboOption(derive.weeklyCohorts(), t),
-    momentum: charts.momentumOption(derive.momentumWeeks(), t),
-    rose: charts.roseOption(derive.sourceRose(), t),
-    calendar: charts.calendarOption(derive.calendarData(), t),
-    worktype: charts.donutOption(derive.workTypeDonut(), t),
-    funnel: charts.funnelOption(derive.stageFunnel(), t),
-    outcomes: charts.outcomeBarOption(derive.outcomeBreakdown(), t),
-    gates: charts.gatesBarOption(derive.gatesData(), t),
-    speed: charts.speedHistOption(speed, t),
+    sources: () => charts.sourceBarOption(derive.sourceEffectiveness(), t),
+    gauge: () => charts.gaugeOption(kpis.responseRate, t),
+    cohorts: () => charts.cohortComboOption(derive.weeklyCohorts(), t),
+    momentum: () => charts.momentumOption(derive.momentumWeeks(), t),
+    rose: () => charts.roseOption(derive.sourceRose(), t),
+    calendar: () => charts.calendarOption(derive.calendarData(), t),
+    worktype: () => charts.donutOption(derive.workTypeDonut(), t),
+    funnel: () => charts.funnelOption(derive.stageFunnel(), t),
+    outcomes: () => charts.outcomeBarOption(derive.outcomeBreakdown(), t),
+    gates: () => charts.gatesBarOption(derive.gatesData(), t),
+    speed: () => charts.speedHistOption(speed, t),
   };
   const speedN = rootEl && rootEl.querySelector('#ins-speed-n');
   if (speedN) speedN.textContent = `— days to rejection (n=${speed.known} where known)`;
   for (const [name, chart] of registry) {
     try {
-      chart.setOption(options[name], true);
+      chart.setOption(options[name](), true);
     } catch (err) {
       console.error(`insights: ${name} failed to render`, err);
     }

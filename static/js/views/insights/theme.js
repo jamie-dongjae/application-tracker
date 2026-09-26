@@ -11,7 +11,8 @@ export function chartTokens() {
     line: v('--line'),
     lineSoft: v('--line-soft'),
     accent: v('--accent'),
-    accentAlt: v('--accent-alt'),
+    // fallback guards against a stale-cached app.css that predates the token
+    accentAlt: v('--accent-alt') || '#8f7bff',
     panel: v('--panel'),
     fontUI: v('--font-ui'),
     fontMono: v('--font-mono'),
