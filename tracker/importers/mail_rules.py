@@ -102,13 +102,14 @@ def _mentions(text: str, patterns) -> bool:
 
 
 def _base_record(msg: dict, app: dict | None, confidence: str, reason: str) -> dict:
+    from_ats = any(d in (msg.get("from_domain") or "") for d in ATS_DOMAINS)
     rec = {
         "company": app["company"] if app else (msg.get("from_name") or msg.get("from_domain") or "unknown"),
         "title": app["title"] if app else (msg.get("subject") or "")[:60],
         "match": {"id": app["id"]} if app else {},
         "confidence": confidence,
         "reason": reason,
-        "fields": {},
+        "fields": {} if app else ({"source": "Company site"} if from_ats else {}),
         "patch": {},
         "note": "",
         "events": [],

@@ -19,6 +19,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.datetime import from_excel
 
 from . import schema
+from ..importers.normalize import normalize_source, normalize_work_type
 
 BACKUP_KEEP = 20
 BACKUP_MIN_INTERVAL = 3600  # seconds
@@ -69,6 +70,10 @@ def _clean(record: dict, keys: list) -> dict:
             out[key] = coerce_date(value) or ""
         elif key == "gates" and isinstance(value, (list, tuple)):
             out[key] = ", ".join(str(v).strip() for v in value if str(v).strip())
+        elif key == "source":
+            out[key] = normalize_source(value)
+        elif key == "work_type":
+            out[key] = normalize_work_type(value)
         elif key == "status":
             text = str(value).strip()
             out[key] = schema.STATUS_MIGRATE.get(text, text)

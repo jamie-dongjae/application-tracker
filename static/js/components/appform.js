@@ -10,7 +10,7 @@ const FIELDS = [
   { key: 'date_applied', label: 'Date Applied', type: 'date' },
   { key: 'location', label: 'Location', placeholder: 'City, Country' },
   { key: 'work_type', label: 'Work Type', type: 'select', options: WORK_TYPES },
-  { key: 'source', label: 'Source', placeholder: 'LinkedIn, Company site…' },
+  { key: 'source', label: 'Source', placeholder: 'LinkedIn, Company site…', datalist: ['LinkedIn', 'Company site', 'Job board', 'Referral', 'Recruiter', 'Other'] },
   { key: 'sponsorship', label: 'Sponsorship', placeholder: 'Mentioned / Not offered' },
   { key: 'referral', label: 'Referral' },
   { key: 'track', label: 'Track', type: 'select', options: ['', ...TRACKS], labels: TRACK_LABELS },
@@ -57,9 +57,12 @@ export function renderForm(values = {}, provenance = {}) {
       control = `<textarea name="${f.key}" rows="${f.rows || 3}">${esc(value)}</textarea>`;
     } else {
       const type = f.type || 'text';
-      control = `<input name="${f.key}" type="${type}" value="${esc(value)}"
+      const listAttr = f.datalist ? `list="dl-${f.key}"` : '';
+      const datalist = f.datalist
+        ? `<datalist id="dl-${f.key}">${f.datalist.map((o) => `<option value="${esc(o)}">`).join('')}</datalist>` : '';
+      control = `<input name="${f.key}" type="${type}" value="${esc(value)}" ${listAttr}
         placeholder="${esc(f.placeholder || '')}" ${f.required ? 'required' : ''}
-        ${type === 'number' ? 'min="0" step="1000"' : ''}>`;
+        ${type === 'number' ? 'min="0" step="1000"' : ''}>${datalist}`;
     }
     return `<div class="field ${f.full ? 'full' : ''}">
       <label>${f.label}${f.required ? ' *' : ''}</label>${prov}${control}

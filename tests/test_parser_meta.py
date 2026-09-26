@@ -11,8 +11,9 @@ def test_og_title_at_pattern():
 
 
 def test_source_from_url():
+    # delegates to the canonical normalizer: job boards fold into one bucket
     assert meta_tags.source_from_url("https://www.linkedin.com/jobs/view/1") == "LinkedIn"
-    assert meta_tags.source_from_url("https://nl.indeed.com/viewjob?jk=1") == "Indeed"
+    assert meta_tags.source_from_url("https://nl.indeed.com/viewjob?jk=1") == "Job board"
     assert meta_tags.source_from_url("https://boards.greenhouse.io/acme/jobs/1") == "Company site"
     assert meta_tags.source_from_url("https://careers.acme.com/jobs/1") == "Company site"
 

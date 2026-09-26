@@ -56,7 +56,7 @@ COMPANIES = [
     ("Redshift Labs", "Data Analyst"),
 ]
 
-SOURCES = ["LinkedIn", "Company site", "Referral", "Indeed", "Otta"]
+SOURCES = ["LinkedIn", "Company site", "Referral", "Job board", "Recruiter"]
 SPONSOR = ["Mentioned", "Not offered", ""]
 STATUS_WEIGHTED = (["Applied"] * 8 + ["Interview"] * 5 + ["Offer"] * 2 +
                    ["Accepted"] * 1 + ["Declined"] * 2 +

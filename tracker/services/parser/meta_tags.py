@@ -8,34 +8,14 @@ from selectolax.parser import HTMLParser
 
 from .textutil import clean_ws
 
-SOURCE_BY_DOMAIN = {
-    "linkedin.com": "LinkedIn",
-    "indeed": "Indeed",
-    "glassdoor": "Glassdoor",
-    "greenhouse.io": "Company site",
-    "lever.co": "Company site",
-    "ashbyhq.com": "Company site",
-    "workable.com": "Company site",
-    "recruitee.com": "Company site",
-    "smartrecruiters.com": "Company site",
-    "myworkdayjobs.com": "Company site",
-    "join.com": "Join",
-    "otta.com": "Otta",
-    "welcometothejungle.com": "WTTJ",
-    "wellfound.com": "Wellfound",
-    "iamexpat.nl": "IamExpat",
-    "magnet.me": "Magnet.me",
-}
-
 _TITLE_SPLIT = re.compile(r"\s+[|–—·]\s+|\s+-\s+")
 
 
 def source_from_url(url: str) -> str:
-    host = (urlparse(url).hostname or "").lower().removeprefix("www.")
-    for needle, label in SOURCE_BY_DOMAIN.items():
-        if needle in host:
-            return label
-    return "Company site" if host else ""
+    # Single source of truth for URL -> source lives with the normalizer, so
+    # prefill, importers and the cleanup script agree on the vocabulary.
+    from ...importers.normalize import infer_source_from_url
+    return infer_source_from_url(url)
 
 
 def company_from_host(url: str) -> str:
