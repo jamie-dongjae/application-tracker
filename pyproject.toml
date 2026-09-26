@@ -17,6 +17,11 @@ dependencies = [
     "selectolax>=0.3.21",
 ]
 
+[project.urls]
+Repository = "https://github.com/jamie-dongjae/application-tracker"
+Demo = "https://jamie-dongjae.github.io/application-tracker/"
+Issues = "https://github.com/jamie-dongjae/application-tracker/issues"
+
 [project.optional-dependencies]
 dev = ["pytest>=7.4"]
 
