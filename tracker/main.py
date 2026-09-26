@@ -34,6 +34,20 @@ def create_app(store: ExcelStore | None = None, history: History | None = None,
         return JSONResponse(status_code=409,
                             content={"error": "workbook_locked", "detail": str(exc)})
 
+    @app.middleware("http")
+    async def cache_policy(request: Request, call_next):
+        # Local-first app: heuristic browser caching only ever serves stale
+        # modules after an update. ETag revalidation stays (304s are cheap).
+        response = await call_next(request)
+        path = request.url.path
+        if path.startswith("/vendor/"):
+            response.headers["Cache-Control"] = "max-age=86400"
+        elif path.startswith(("/js/", "/css/")):
+            response.headers["Cache-Control"] = "no-cache"
+        elif response.headers.get("content-type", "").startswith("text/html"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     if STATIC_DIR.exists():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 

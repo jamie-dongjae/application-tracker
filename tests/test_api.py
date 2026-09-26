@@ -107,6 +107,14 @@ def test_decline_offer(client):
     assert transitions[-1]["to"] == "Declined"
 
 
+def test_static_cache_policy(client):
+    # js/css revalidate every load; html never cached — stale-module bug guard
+    assert client.get("/js/main.js").headers["cache-control"] == "no-cache"
+    assert client.get("/css/app.css").headers["cache-control"] == "no-cache"
+    assert client.get("/").headers["cache-control"] == "no-store"
+    assert client.get("/vendor/echarts.min.js").headers["cache-control"] == "max-age=86400"
+
+
 def test_settings_roundtrip(client):
     client.put("/api/settings", json={"weekly_goal": 7})
     assert client.get("/api/settings").json()["weekly_goal"] == 7

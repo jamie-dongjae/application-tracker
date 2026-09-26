@@ -23,7 +23,7 @@ const SKELETON = `
   </div>
   <div class="grid-kpi" style="grid-template-columns:repeat(6,1fr)" id="ins-kpis"></div>
   <div class="insights-grid">
-    <div class="panel span-7"><h2 class="panel-title">Source effectiveness — where screens come from</h2>
+    <div class="panel span-7"><h2 class="panel-title">Source effectiveness — screen rate by channel</h2>
       <div class="chart-box tall" data-chart="sources"></div></div>
     <div class="panel span-5"><h2 class="panel-title">Response rate</h2>
       <div class="chart-box tall" data-chart="gauge"></div></div>

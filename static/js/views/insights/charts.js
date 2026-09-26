@@ -7,48 +7,51 @@ function merge(t, option) {
   return Object.assign(baseOption(t), option);
 }
 
-// Where should I apply: per-source volume with the screened share overlaid.
+// Where should I apply: the bar IS the screen rate — the best channel is the
+// longest bar, full stop. Volume rides along as the label ("75% (3/4)").
 export function sourceBarOption(data, t) {
   return merge(t, {
     tooltip: Object.assign(baseOption(t).tooltip, {
       trigger: 'axis', axisPointer: { type: 'shadow' },
       formatter: (ps) => {
         const row = data[ps[0].dataIndex];
-        return `${row.source}<br>${row.submitted} submitted · <b>${row.screened}</b> screened (${row.screenRate}%)`;
+        return `${row.source}<br><b>${row.screenRate}%</b> screen rate — ` +
+          `${row.screened} of ${row.submitted} applications reached a human` +
+          (row.smallSample ? '<br><i>small sample</i>' : '');
       },
     }),
-    legend: {
-      top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8,
-      textStyle: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
-    },
-    grid: { left: 8, right: 44, top: 26, bottom: 4, containLabel: true },
+    grid: { left: 8, right: 76, top: 10, bottom: 4, containLabel: true },
     xAxis: {
-      type: 'value', minInterval: 1,
+      type: 'value', min: 0, max: 100,
       splitLine: { lineStyle: { color: t.lineSoft } },
-      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono },
+      axisLabel: { color: t.textFaint, fontSize: 9.5, fontFamily: t.fontMono, formatter: '{value}%' },
     },
     yAxis: {
       type: 'category', data: data.map((d) => d.source),
       axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
       axisLabel: { color: t.textDim, fontSize: 10.5, fontFamily: t.fontUI },
     },
-    series: [
-      {
-        name: 'submitted', type: 'bar', barGap: '-100%', barMaxWidth: 16, z: 1,
-        itemStyle: { color: t.lineSoft, borderRadius: [0, 4, 4, 0] },
-        data: data.map((d) => d.submitted),
-        label: {
-          show: true, position: 'right', color: t.textDim,
-          fontSize: 10, fontFamily: t.fontMono,
-          formatter: (p) => `${data[p.dataIndex].screenRate}%`,
+    series: [{
+      type: 'bar', barMaxWidth: 18,
+      showBackground: true,
+      backgroundStyle: { color: t.lineSoft, borderRadius: [0, 4, 4, 0], opacity: 0.35 },
+      itemStyle: {
+        color: t.accent, borderRadius: [0, 4, 4, 0],
+        opacity: 0.95,
+      },
+      label: {
+        show: true, position: 'right', color: t.textDim,
+        fontSize: 10.5, fontFamily: t.fontMono,
+        formatter: (p) => {
+          const row = data[p.dataIndex];
+          return `${row.screenRate}% (${row.screened}/${row.submitted})`;
         },
       },
-      {
-        name: 'screened', type: 'bar', barMaxWidth: 16, z: 2,
-        itemStyle: { color: t.accent, borderRadius: [0, 4, 4, 0], opacity: 0.9 },
-        data: data.map((d) => d.screened),
-      },
-    ],
+      data: data.map((d) => ({
+        value: d.screenRate,
+        itemStyle: d.smallSample ? { color: t.accent, opacity: 0.45 } : undefined,
+      })),
+    }],
   });
 }
 

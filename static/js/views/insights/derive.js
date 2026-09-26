@@ -169,7 +169,8 @@ export function momentumWeeks(topN = 4) {
 
 // ---- Insights v3 selectors ----
 
-// Where should I apply: per canonical source, volume vs real-response rate.
+// Where should I apply: screen RATE per channel — the rate IS the bar, so the
+// most effective channel visually dominates regardless of volume.
 export function sourceEffectiveness() {
   const submitted = pipelineApps().filter((a) => a.status !== 'Wishlist');
   const by = new Map();
@@ -181,8 +182,11 @@ export function sourceEffectiveness() {
     if (isScreened(a)) row.screened += 1;
   }
   return [...by.values()]
-    .map((r) => ({ ...r, screenRate: r.submitted ? Math.round((r.screened / r.submitted) * 100) : 0 }))
-    .sort((x, y) => x.submitted - y.submitted); // horizontal bar: biggest on top
+    .map((r) => ({ ...r,
+      screenRate: r.submitted ? Math.round((r.screened / r.submitted) * 100) : 0,
+      smallSample: r.submitted < 3 }))
+    .sort((x, y) => x.screenRate - y.screenRate || x.submitted - y.submitted);
+    // ascending: horizontal bars render bottom-up, so the best rate sits on top
 }
 
 // Weekly cohorts: is the CV/strategy improving over time? Apps grouped by the
